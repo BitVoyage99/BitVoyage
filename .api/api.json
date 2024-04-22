@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "upbit",
+      "source": "@upbit/v1.4.4#1h2zv2al3jq48nm",
+      "integrity": "sha512-1BiJDhnGQXmbCE/xTjJc7siCHP+KU2qnjdRxVbO4PqZ9+ItBuiZ7AWl+57tkjsD1UX6SFF4w3RhMEmP7mZIYDQ==",
+      "installerVersion": "6.1.1"
+    }
+  ]
+}
