@@ -3,58 +3,6 @@ import useFetchMarketCode from '../hook/useFetchMarketCode';
 import useStore from '../stores/store';
 
 const SOCKET_URL = 'wss://api.upbit.com/websocket/v1';
-/* 
-const useWebSocketTicker = targetMarketCodes => {
-  const socket = useRef(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [tickerData, setTickerData] = useState([]);
-
-  useEffect(() => {
-    if (targetMarketCodes.length === 0) {
-      return;
-    }
-
-    socket.current = new WebSocket(SOCKET_URL);
-    socket.current.binaryType = 'arraybuffer';
-
-    const socketOpenHandler = () => {
-      setIsConnected(true);
-      const requestMessage = JSON.stringify([
-        { ticket: 'test' },
-        { type: 'ticker', codes: ['KRW-BTC', 'KRW-ETH'] },
-        // { type: 'ticker', codes: targetMarketCodes.map(code => code.market) },
-        // { type: 'ticker', codes: targetMarketCodes.map(code => code.market) },
-        { format: 'DEFAULT' },
-      ]);
-      socket.current.send(requestMessage);
-      console.log(
-        '????? ',
-        targetMarketCodes.map(code => code.market)
-      );
-    };
-
-    const socketMessageHandler = event => {
-      const data = JSON.parse(
-        new TextDecoder('utf-8').decode(new Uint8Array(event.data))
-      );
-      // console.log('??? ', data);
-      // setTickerData([...data]);
-      setTickerData(prevData => [...prevData, data]);
-    };
-
-    socket.current.addEventListener('open', socketOpenHandler);
-    socket.current.addEventListener('message', socketMessageHandler);
-
-    return () => {
-      if (socket.current) {
-        socket.current.close();
-        setIsConnected(false);
-      }
-    };
-  }, [targetMarketCodes]);
-
-  return { isConnected, tickerData };
-}; */
 
 const useWebSocketTicker = targetMarketCodes => {
   const socket = useRef(null);
@@ -119,7 +67,7 @@ const CoinList = () => {
   // console.log('marketCodes???? ', marketCodes);
   const { socketData, setSelectedCoin, selectedCoin } = useStore();
 
-  // console.log(tickerData);
+  // console.log('???tickerData??? ', tickerData);
   if (isLoading) {
     return <div>Loading market codes...</div>;
   }
@@ -157,7 +105,9 @@ const CoinList = () => {
 
   */
 
-  const LogoImage = marketCode => {
+  /*  
+// 아이콘 용 임시
+const LogoImage = marketCode => {
     // console.log('marketCode??? ', marketCode);
     const coinSymbol = marketCode.split('-')[1];
     const logoImageUrl = `https://static.upbit.com/logos/${coinSymbol}.png`;
@@ -165,6 +115,18 @@ const CoinList = () => {
     // return <img src={logoImageUrl} alt={`${coinSymbol} 로고`} />;
     return logoImageUrl;
   };
+ */
+
+  function getColorClass(changeType) {
+    switch (changeType) {
+      case 'RISE':
+        return 'text-red-500';
+      case 'FALL':
+        return 'text-blue-500';
+      default:
+        return 'text-black';
+    }
+  }
 
   return (
     <div className="sticky top-18 bg-white h-screen w-full overflow-hidden max-w-xl mx-auto">
@@ -184,16 +146,7 @@ const CoinList = () => {
         <div className="flex-1 text-right pr-2">상승률</div>
         <div className="w-1/4 text-right pr-3">거래대금</div>
       </div>
-      {/* <ul>
-        {tickerData.map((ticker, index) => (
-          <li key={index}>
-            <strong>{ticker.code}:</strong>{' '}
-            {ticker.trade_price.toLocaleString()} KRW
-            <div>Change: {ticker.change_rate.toFixed(2)}%</div>
-            <div>Volume: {ticker.trade_volume.toLocaleString()}</div>
-          </li>
-        ))}
-      </ul> */}
+
       <ul className="h-5/6 overflow-y-auto">
         {tickerData.map((ticker, index) => (
           <li
@@ -225,10 +178,11 @@ const CoinList = () => {
                 </span>
               </div>
               <strong
-                className={`block w-1/5 min-w-[55px] text-right align-middle text-sm font-bold `}>
+                className={`block w-1/5 min-w-[55px] text-right align-middle text-sm font-bold ${getColorClass(ticker.change)}`}>
                 {ticker.trade_price.toLocaleString('ko-KR')}
               </strong>
-              <div className="flex flex-col justify-center w-1/5 min-w-[55px] text-right">
+              <div
+                className={`flex flex-col justify-center w-1/5 min-w-[55px] text-right ${getColorClass(ticker.change)}`}>
                 <span className={`text-xs `}>
                   {ticker.signed_change_rate > 0 ? '+' : null}
                   {(ticker.signed_change_rate * 100).toFixed(2)}%
@@ -244,16 +198,6 @@ const CoinList = () => {
           </li>
         ))}
       </ul>
-      {/* <ul>
-        <li className="w-full h-11 border-b-2 border-gray-100">
-          <button className="flex justify-center items-center w-full h-full ">
-            hello
-          </button>
-          <div className="flex  h-11">
-            <strong>coin</strong>
-          </div>
-        </li>
-      </ul> */}
     </div>
   );
 };
