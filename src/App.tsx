@@ -1,9 +1,10 @@
-import './App.css';
+// import './App.css';
+import CoinList from './components/CoinList';
 
 function App() {
   return (
     <>
-      <p className="text-3xl font-bold underline">테스트</p>
+      <CoinList />
     </>
   );
 }
