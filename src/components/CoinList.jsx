@@ -3,6 +3,58 @@ import useFetchMarketCode from '../hook/useFetchMarketCode';
 import useStore from '../stores/store';
 
 const SOCKET_URL = 'wss://api.upbit.com/websocket/v1';
+/* 
+const useWebSocketTicker = targetMarketCodes => {
+  const socket = useRef(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [tickerData, setTickerData] = useState([]);
+
+  useEffect(() => {
+    if (targetMarketCodes.length === 0) {
+      return;
+    }
+
+    socket.current = new WebSocket(SOCKET_URL);
+    socket.current.binaryType = 'arraybuffer';
+
+    const socketOpenHandler = () => {
+      setIsConnected(true);
+      const requestMessage = JSON.stringify([
+        { ticket: 'test' },
+        { type: 'ticker', codes: ['KRW-BTC', 'KRW-ETH'] },
+        // { type: 'ticker', codes: targetMarketCodes.map(code => code.market) },
+        // { type: 'ticker', codes: targetMarketCodes.map(code => code.market) },
+        { format: 'DEFAULT' },
+      ]);
+      socket.current.send(requestMessage);
+      console.log(
+        '????? ',
+        targetMarketCodes.map(code => code.market)
+      );
+    };
+
+    const socketMessageHandler = event => {
+      const data = JSON.parse(
+        new TextDecoder('utf-8').decode(new Uint8Array(event.data))
+      );
+      // console.log('??? ', data);
+      // setTickerData([...data]);
+      setTickerData(prevData => [...prevData, data]);
+    };
+
+    socket.current.addEventListener('open', socketOpenHandler);
+    socket.current.addEventListener('message', socketMessageHandler);
+
+    return () => {
+      if (socket.current) {
+        socket.current.close();
+        setIsConnected(false);
+      }
+    };
+  }, [targetMarketCodes]);
+
+  return { isConnected, tickerData };
+}; */
 
 const useWebSocketTicker = targetMarketCodes => {
   const socket = useRef(null);
@@ -28,10 +80,23 @@ const useWebSocketTicker = targetMarketCodes => {
     };
 
     const socketMessageHandler = event => {
-      const data = JSON.parse(
+      const newData = JSON.parse(
         new TextDecoder('utf-8').decode(new Uint8Array(event.data))
       );
-      setTickerData(prevData => [...prevData, data]);
+
+      setTickerData(prevData => {
+        const existingIndex = prevData.findIndex(
+          item => item.code === newData.code
+        );
+        if (existingIndex > -1) {
+          // Replace the existing data with the new data
+          const updatedData = [...prevData];
+          updatedData[existingIndex] = newData;
+          return updatedData;
+        }
+        // If it's a new data, add it to the array
+        return [...prevData, newData];
+      });
     };
 
     socket.current.addEventListener('open', socketOpenHandler);
@@ -51,9 +116,10 @@ const useWebSocketTicker = targetMarketCodes => {
 const CoinList = () => {
   const { isLoading, marketCodes } = useFetchMarketCode({ debug: true });
   const { isConnected, tickerData } = useWebSocketTicker(marketCodes);
+  // console.log('marketCodes???? ', marketCodes);
   const { socketData, setSelectedCoin, selectedCoin } = useStore();
 
-  //   console.log(tickerData);
+  // console.log(tickerData);
   if (isLoading) {
     return <div>Loading market codes...</div>;
   }
@@ -91,6 +157,15 @@ const CoinList = () => {
 
   */
 
+  const LogoImage = marketCode => {
+    // console.log('marketCode??? ', marketCode);
+    const coinSymbol = marketCode.split('-')[1];
+    const logoImageUrl = `https://static.upbit.com/logos/${coinSymbol}.png`;
+
+    // return <img src={logoImageUrl} alt={`${coinSymbol} 로고`} />;
+    return logoImageUrl;
+  };
+
   return (
     <div className="sticky top-18 bg-white h-screen w-full overflow-hidden max-w-xl mx-auto">
       <h1>{isConnected ? 'Connected' : 'Disconnected'}</h1>
@@ -119,7 +194,7 @@ const CoinList = () => {
           </li>
         ))}
       </ul> */}
-      <ul className="overflow-y-auto">
+      <ul className="h-5/6 overflow-y-auto">
         {tickerData.map((ticker, index) => (
           <li
             className="border-b border-gray-200 bg-gray-200"
@@ -129,10 +204,11 @@ const CoinList = () => {
             selected={selectedCoin === ticker.code}>
             <button className="flex justify-between items-center w-full h-full text-left">
               {/* 아이콘 */}
+              {/* <img src={LogoImage(ticker.code)} alt={` 로고`} /> */}
               {/* <i
-              className={`inline-block w-5 h-5 bg-[url('https://static.upbit.com/logos/${enCoinName.split('/')[0]}.png')] bg-cover ml-1 mr-4`}>
-
-              </i> */}
+                className={`inline-block w-5 h-5 bg-[url(${LogoImage(ticker.code)})] bg-cover ml-1 mr-4`}></i> */}
+              {/* <i
+                className={`inline-block w-5 h-5 bg-[url('https://static.upbit.com/logos/${ticker.market.split('/')[0]}.png')] bg-cover ml-1 mr-4`}></i> */}
               <div className="flex flex-col justify-center w-1/5 min-w-[55px]">
                 <strong className="block text-sm font-bold">
                   {
