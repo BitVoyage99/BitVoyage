@@ -7,23 +7,19 @@ import {
   MouseEventParams,
 } from 'lightweight-charts';
 import useNewData from './hooks/useNewData';
-
-interface UpbitCandle {
-  market: string;
-  candle_date_time_utc: string;
-  opening_price: number;
-  high_price: number;
-  low_price: number;
-  trade_price: number;
-  timestamp: number;
-}
+import ChartDataAdapter from './adapters/chartDataAdapter';
 
 const App: React.FC = () => {
   const [unit, setUnit] = useState('minute'); // 'minute', 'hour', 'day', 'month'
+  const [marketCode, setMarketCode] = useState(['KRW-BTC']);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
-  const newData = useNewData();
+  //소켓, url 요청시 종목(market)을 전역변수화시키자.
+  //const newData = useNewData();
+  const newData = useNewData(marketCode);
+  //24.05.04 volume histogramSeries를 추가한다.
+  const histogramSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null); // 거래량 시리즈 참조 추가
 
   //TODO
   // const handleMenuClick = () => {
@@ -34,10 +30,11 @@ const App: React.FC = () => {
   //   <menu onClick={handleMenuClick}>
   //     {timeUnits.map(unit => (
   //       <menu.Item key={unit}>{unit}</menu.Item>
-  //     ))}
+  //     ))}z
   //   </menu>
   // );
 
+  //차트 생성
   useEffect(() => {
     if (chartContainerRef.current && !chartRef.current) {
       chartRef.current = createChart(chartContainerRef.current, {
@@ -53,6 +50,26 @@ const App: React.FC = () => {
         lastValueVisible: true,
         priceFormat: { type: 'price', precision: 0, minMove: 0.01 },
         priceScaleId: priceScaleId,
+      });
+
+      //24.05.04 volume
+      histogramSeriesRef.current = chartRef.current.addHistogramSeries({
+        color: '#26a69a',
+        priceFormat: {
+          type: 'volume',
+        },
+        priceScaleId: 'right',
+        scaleMargins: {
+          top: 0.8,
+          bottom: 0,
+        },
+      });
+      histogramSeriesRef.current = chartRef.current.addHistogramSeries({
+        color: '#26a69a',
+        priceFormat: {
+          type: 'volume',
+        },
+        priceScaleId: 'right',
       });
 
       // 해당 가격 축의 설정을 조정
@@ -92,10 +109,12 @@ const App: React.FC = () => {
           }
         },
       });
+
       setupTooltip(chartRef.current, candleSeriesRef.current);
     }
   }, [unit]); // Ensure formatter updates when unit changes
 
+  //fetchData
   useEffect(() => {
     const fetchData = async () => {
       if (!candleSeriesRef.current) return;
@@ -115,22 +134,23 @@ const App: React.FC = () => {
 
       try {
         const response = await axios.get(
-          `https://api.upbit.com/v1/candles/${selectedParam.url}?market=KRW-BTC&count=${selectedParam.count}`
+          `https://api.upbit.com/v1/candles/${selectedParam.url}?market=${marketCode}&count=${selectedParam.count}`
         );
-        const sortedData = response.data
-          //TODO lightweight 차트 플립현상(소켓들어온 데이터가 가공되지 않고 적용후 약 0.2초정도 차트에 표시된다음 다시 정상으로 돌아옴.)
-          .map((candle: UpbitCandle) => ({
-            time: Math.floor(
-              new Date(candle.candle_date_time_utc).getTime() / 1000
-            ),
-            open: candle.opening_price / 100000,
-            high: candle.high_price / 100000,
-            low: candle.low_price / 100000,
-            close: candle.trade_price / 100000,
-          }))
-          .sort((a: { time: number }, b: { time: number }) => a.time - b.time);
 
-        candleSeriesRef.current.setData(sortedData);
+        const adapter = new ChartDataAdapter(response.data);
+        const chartData = adapter.adapt();
+        candleSeriesRef.current.setData(chartData);
+
+        // const histogramData = prepareHistogramData(sortedData);
+        // histogramSeriesRef.current?.setData(histogramData);
+
+        histogramSeriesRef.current?.setData(
+          chartData.map(data => ({
+            time: data.time,
+            value: data.volume, // 데이터 검증: volume이 정의되지 않았다면 0을 사용
+            color: data.close > data.open ? '#0000FF' : '#FFC0CB',
+          }))
+        );
       } catch (error) {
         //console.error('Error fetching data:', error);
         console.warn('Error fetching data:', error);
@@ -139,7 +159,8 @@ const App: React.FC = () => {
     //1.
     fetchData();
     //2.
-    if (newData && candleSeriesRef.current) {
+    //TODO 아래 배열에서 newData와 unit을 새로운 useEffect로 분리가 필요합니다
+    if (newData && candleSeriesRef.current && histogramSeriesRef.current) {
       console.log('New data in component:', newData);
       candleSeriesRef.current.update({
         time: newData.time,
@@ -148,8 +169,30 @@ const App: React.FC = () => {
         low: newData.low / 100000,
         close: newData.close / 100000,
       });
+
+      histogramSeriesRef.current.update({
+        time: newData.time,
+        value: newData.trade_volume,
+        color: newData.close > newData.open ? '#0000FF' : '#FFC0CB',
+      });
     }
-  }, [newData, unit]);
+  }, [marketCode, newData, unit]);
+
+  // function prepareHistogramData(data: UpbitCandle[]): HistogramData[] {
+  //   return data.map(candle => ({
+  //     time: candle.candle_date_time_utc,
+  //     value: candle.candle_acc_trade_volume,
+  //     color: candle.trade_price > candle.opening_price ? '#0000FF' : '#FFC0CB',
+  //   }));
+  // }
+
+  // histogramSeriesRef.current.setData(
+  //   sortedData.map(data => ({
+  //     time: data.time,
+  //     value: data.volume, // 데이터 검증: volume이 정의되지 않았다면 0을 사용
+  //     color: data.close > data.open ? '#0000FF' : '#FFC0CB',
+  //   }))
+  // );
 
   function setupTooltip(chart: IChartApi, series: ISeriesApi<'Candlestick'>) {
     const tooltip = document.createElement('div');
@@ -301,6 +344,10 @@ const App: React.FC = () => {
       <button onClick={() => zoomIn()}>+</button>
       <button onClick={() => zoomOut()}>-</button>
       <button onClick={() => zoomReset()}>초기화</button>
+
+      <button onClick={() => setMarketCode(['KRW-ETH'])}>Load Ethereum</button>
+      <button onClick={() => setMarketCode(['KRW-XRP'])}>Load Ripple</button>
+      <button onClick={() => setMarketCode(['KRW-ADA'])}>Load Cardano</button>
     </div>
   );
 };

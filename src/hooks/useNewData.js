@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 const UPBIT_URL = 'wss://api.upbit.com/websocket/v1';
-const useNewData = () => {
+
+const useNewData = market => {
   const [result, setResult] = useState();
   const [timer, setTimer] = useState(false);
   const data = [
     { ticket: 'nexoneunji' },
-    { type: 'ticker', codes: ['KRW-BTC'], isOnlyRealtime: true },
+    { type: 'ticker', codes: market, isOnlyRealtime: true },
   ];
   const ws = useRef(null);
 
   useEffect(() => {
-    // timer 종료 시
+    // timer 종료 시 트리거
     if (timer) {
       alert('만료되었습니다.');
       ws.current.close();
@@ -43,7 +44,7 @@ const useNewData = () => {
         high_price,
         trade_price,
         timestamp,
-        //trade_volume,
+        trade_volume,
       } = message;
       //console.log('data received:', );
       // Timestamp received: 1714714930721
@@ -54,6 +55,7 @@ const useNewData = () => {
         high: high_price,
         low: low_price,
         close: trade_price,
+        volume: trade_volume,
       };
       console.log(
         'data received : ' +
@@ -61,7 +63,8 @@ const useNewData = () => {
           chartData.opening_price +
           chartData.high_price +
           chartData.low_price +
-          chartData.trade_price
+          chartData.trade_price +
+          chartData.trade_volume
       );
       setResult(chartData);
       // setResult({
