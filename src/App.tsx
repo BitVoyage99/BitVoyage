@@ -64,13 +64,6 @@ const App: React.FC = () => {
           bottom: 0,
         },
       });
-      histogramSeriesRef.current = chartRef.current.addHistogramSeries({
-        color: '#26a69a',
-        priceFormat: {
-          type: 'volume',
-        },
-        priceScaleId: 'right',
-      });
 
       // 해당 가격 축의 설정을 조정
       chartRef.current.priceScale(priceScaleId).applyOptions({
@@ -159,11 +152,10 @@ const App: React.FC = () => {
     //1.
     fetchData();
     //2.
-    //TODO 아래 배열에서 newData와 unit을 새로운 useEffect로 분리가 필요합니다
     if (newData && candleSeriesRef.current && histogramSeriesRef.current) {
       console.log('New data in component:', newData);
       candleSeriesRef.current.update({
-        time: newData.time,
+        time: newData.timestamp,
         open: newData.open / 100000,
         high: newData.high / 100000,
         low: newData.low / 100000,
@@ -171,7 +163,7 @@ const App: React.FC = () => {
       });
 
       histogramSeriesRef.current.update({
-        time: newData.time,
+        time: newData.timestamp,
         value: newData.trade_volume,
         color: newData.close > newData.open ? '#0000FF' : '#FFC0CB',
       });

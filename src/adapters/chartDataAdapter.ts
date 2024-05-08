@@ -1,4 +1,5 @@
-import { UpbitCandle, ChartData } from '../types/types.ts';
+import { UpbitCandle, ChartData } from '../types/types';
+
 class ChartDataAdapter {
   private candles: UpbitCandle[];
 

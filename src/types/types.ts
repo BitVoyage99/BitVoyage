@@ -17,3 +17,12 @@ export interface ChartData {
   close: number;
   volume: number;
 }
+
+export interface NewDataMessage {
+  opening_price: number;
+  low_price: number;
+  high_price: number;
+  trade_price: number;
+  timestamp: number;
+  trade_volume: number;
+}
