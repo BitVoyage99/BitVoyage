@@ -1,18 +1,30 @@
-import { OrderBook } from '@/types/coin';
+import { OrderBookSocketData } from '@/types/coin';
 
 class OrderBookAdapter {
-  private orderBook: OrderBook;
+  private orderBook: OrderBookSocketData;
+  private prevClosingPrice?: number;
 
-  constructor(orderBook: OrderBook) {
+  constructor(orderBook: OrderBookSocketData, prevClosingPrice?: number) {
     this.orderBook = orderBook;
+    this.prevClosingPrice = prevClosingPrice;
   }
 
   public adapt() {
     return {
       orderbook_units: this.orderBook.orderbook_units.map(unit => ({
         ...unit,
+        ask_size: unit.ask_size.toFixed(3),
+        ask_price: unit.ask_price.toLocaleString(),
+        bid_size: unit.bid_size.toFixed(3),
+        bid_price: unit.bid_price.toLocaleString(),
         askChangeRate: this.getAskChangeRate(unit.ask_size),
         bidChangeRate: this.getBidChangeRate(unit.bid_size),
+        askPriceChangePercent: this.calculatePricePercentageChange(
+          unit.ask_price
+        ),
+        bidPriceChangePercent: this.calculatePricePercentageChange(
+          unit.bid_price
+        ),
       })),
       askMaxSize: this.getAskMaxSize(),
       bidMaxSize: this.getBidMaxSize(),
@@ -39,6 +51,13 @@ class OrderBookAdapter {
   private getBidChangeRate(bid_size: number) {
     const bidMaxSize = this.getBidMaxSize();
     return (bid_size / bidMaxSize) * 100;
+  }
+
+  private calculatePricePercentageChange(currentPrice: number) {
+    if (!this.prevClosingPrice) return '0.00';
+    const change =
+      ((currentPrice - this.prevClosingPrice) / this.prevClosingPrice) * 100;
+    return change.toFixed(2);
   }
 }
 
