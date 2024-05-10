@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useFetchMarketCode from '../hook/useFetchMarketCode';
 import useStore from '../stores/store';
 
@@ -81,6 +81,28 @@ const CoinList = () => {
   // console.log('???tickerData??? ', tickerData);
 
   const prevTickerData = usePrevious(tickerData);
+  const [sortOrder, setSortOrder] = useState(null);
+
+  const sortedData = useMemo(() => {
+    if (!tickerData) return [];
+
+    const data = [...tickerData];
+    // console.log('data?', data);
+    if (sortOrder === 'asc') {
+      data.sort((a, b) => a.acc_trade_price_24h - b.acc_trade_price_24h);
+      console.log();
+    } else if (sortOrder === 'desc') {
+      data.sort((a, b) => b.acc_trade_price_24h - a.acc_trade_price_24h);
+    }
+
+    return data;
+  }, [tickerData, sortOrder]);
+
+  const toggleSortOrder = () => {
+    setSortOrder(prevOrder => {
+      return prevOrder === 'asc' ? 'desc' : 'asc';
+    });
+  };
 
   if (isLoading) {
     return <div>Loading market codes...</div>;
@@ -177,11 +199,13 @@ const LogoImage = marketCode => {
         <div className="w-12 pl-2 text-left">한글명</div>
         <div className="flex-1 text-right pr-2">현재가</div>
         <div className="flex-1 text-right pr-2">전일 대비</div>
-        <div className="w-1/4 text-right pr-3">거래대금</div>
+        <div className="w-1/4 text-right pr-3" onClick={toggleSortOrder}>
+          거래대금
+        </div>
       </div>
 
       <ul className="h-5/6 overflow-y-auto">
-        {tickerData.map((ticker, index) => {
+        {sortedData.map((ticker, index) => {
           const prevTicker = prevTickerData?.find(t => t.code === ticker.code);
           const changeDirection = getChangeDirection(ticker, prevTicker);
           const changeClass =
