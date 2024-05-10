@@ -76,6 +76,7 @@ const CoinList = () => {
   const { isConnected, tickerData } = useWebSocketTicker(marketCodes);
   // console.log('marketCodes???? ', marketCodes);
   const { socketData, setSelectedCoin, selectedCoin } = useStore();
+  // console.log(selectedCoin);
 
   // console.log('???tickerData??? ', tickerData);
 
@@ -105,7 +106,7 @@ const CoinList = () => {
     );
     setSelectedCoin(currentTarget);
     // console.log('selectedCoin', selectedCoin[0].market);
-    console.log('selectedCoin', selectedCoin);
+    // console.log('selectedCoin', selectedCoin);
   }
 
   /* 
@@ -190,13 +191,15 @@ const LogoImage = marketCode => {
                 ? 'border border-solid border-blue-500'
                 : '';
 
+          const selectedClass =
+            selectedCoin[0].market === ticker.code ? 'bg-gray-200' : '';
+
           return (
             <li
-              className={`border-b border-gray-200 bg-gray-200 `}
+              className={`border-b border-gray-200 ${selectedClass} hover:bg-gray-200`}
               key={index}
               id={ticker.code}
-              onClick={handleClickCoin}
-              selected={selectedCoin === ticker.code}>
+              onClick={handleClickCoin}>
               <button className="flex justify-between items-center w-full h-full text-left">
                 {/* 아이콘 */}
                 {/* <img src={LogoImage(ticker.code)} alt={` 로고`} /> */}

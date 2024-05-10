@@ -7,10 +7,24 @@ const useStore = create(set => ({
   socketData: [],
   setSocketData: data =>
     set(state => ({ socketData: [...state.socketData, ...data] })),
-  selectedCoin: null,
+  selectedCoin: [
+    {
+      market: 'KRW-BTC',
+      korean_name: '비트코인',
+      english_name: 'Bitcoin',
+    },
+  ],
+  // selectedCoin: null,
   setSelectedCoin: coin => set({ selectedCoin: coin }),
 }));
 
+/* [
+  {
+    market: 'KRW-BTC',
+    korean_name: '비트코인',
+    english_name: 'Bitcoin',
+  },
+]; */
 export default useStore;
 
 /* import create from 'zustand';
