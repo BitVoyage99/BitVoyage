@@ -82,6 +82,9 @@ const CoinList = () => {
 
   const prevTickerData = usePrevious(tickerData);
   const [sortOrder, setSortOrder] = useState(null);
+  const [imgSrc, setImgSrc] = useState(
+    'https://cdn.upbit.com/upbit-web/images/ico_up_down_2.80e5420.png'
+  );
 
   const sortedData = useMemo(() => {
     if (!tickerData) return [];
@@ -102,6 +105,16 @@ const CoinList = () => {
     setSortOrder(prevOrder => {
       return prevOrder === 'asc' ? 'desc' : 'asc';
     });
+
+    if (sortOrder === 'asc') {
+      setImgSrc(
+        'https://cdn.upbit.com/upbit-web/images/ico_up_down_1.af5ac5a.png'
+      );
+    } else if (sortOrder === 'desc') {
+      setImgSrc(
+        'https://cdn.upbit.com/upbit-web/images/ico_up_down_2.80e5420.png'
+      );
+    }
   };
 
   if (isLoading) {
@@ -199,8 +212,11 @@ const LogoImage = marketCode => {
         <div className="w-12 pl-2 text-left">한글명</div>
         <div className="flex-1 text-right pr-2">현재가</div>
         <div className="flex-1 text-right pr-2">전일 대비</div>
-        <div className="w-1/4 text-right pr-3" onClick={toggleSortOrder}>
-          거래대금
+        <div
+          className="w-1/4 text-right pr-3 flex justify-end gap-4 h-3 items-center cursor-pointer"
+          onClick={toggleSortOrder}>
+          <span>거래대금</span>
+          <img src={imgSrc} alt="정렬 아이콘" />
         </div>
       </div>
 
