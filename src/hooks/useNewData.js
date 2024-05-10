@@ -60,15 +60,15 @@ const useNewData = market => {
       //   close: trade_price,
       //   volume: trade_volume,
       // };
-      // console.log(
-      //   'data received : ' +
-      //     chartData.time.toString +
-      //     chartData.opening_price +
-      //     chartData.high_price +
-      //     chartData.low_price +
-      //     chartData.trade_price +
-      //     chartData.trade_volume
-      // );
+      console.log(
+        'data received : ' +
+          chartData.time.toString +
+          chartData.opening_price +
+          chartData.high_price +
+          chartData.low_price +
+          chartData.trade_price +
+          chartData.trade_volume
+      );
       setResult(chartData);
     };
     ws.current.onerror = event => {
