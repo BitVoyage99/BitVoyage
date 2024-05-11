@@ -33,7 +33,7 @@ function useFetchMarketCode(option = { debug: false }) {
       setMarketCodes(krwMarketCodes);
 
       if (option.debug) {
-        console.log('Market codes fetched:', krwMarketCodes);
+        // console.log('Market codes fetched:', krwMarketCodes);
       }
     } catch (error) {
       console.error('Error fetching market codes:', error);
