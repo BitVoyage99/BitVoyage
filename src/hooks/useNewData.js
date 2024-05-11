@@ -62,7 +62,7 @@ const useNewData = market => {
       // };
       console.log(
         'data received : ' +
-          chartData.time.toString +
+          chartData.timestamp +
           chartData.opening_price +
           chartData.high_price +
           chartData.low_price +

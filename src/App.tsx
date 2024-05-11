@@ -76,7 +76,7 @@ const App: React.FC = () => {
       //추세선 추가
       trendLineSeriesRef.current = chartRef.current.addLineSeries({
         color: 'black',
-        lineWidth: 1,
+        lineWidth: 0.5,
         priceScaleId: priceScaleId,
       });
 
@@ -181,6 +181,7 @@ const App: React.FC = () => {
       if (
         !param.time ||
         param.point === undefined ||
+        !param.seriesPrices ||
         !param.seriesPrices.get(series)
       ) {
         tooltip.style.display = 'none';
