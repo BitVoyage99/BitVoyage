@@ -1,11 +1,11 @@
-import './App.css';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/query-client';
+import Home from './components/home';
 
-function App() {
+export default function App() {
   return (
-    <>
-      <p className="text-3xl font-bold underline">테스트</p>
-    </>
+    <QueryClientProvider client={queryClient}>
+      <Home />
+    </QueryClientProvider>
   );
 }
-
-export default App;
