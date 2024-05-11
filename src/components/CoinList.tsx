@@ -1,8 +1,49 @@
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
-import useFetchMarketCode from '../hook/useFetchMarketCode';
-import useStore from '../stores/store';
+import useFetchMarketCode from '../hook/useFetchMarketCode.ts';
+import useStore from '../stores/store.ts';
 
-function usePrevious(value) {
+interface MarketCode {
+  market: string;
+  korean_name: string;
+  english_name?: string;
+}
+
+interface Ticker {
+  type: string;
+  code: string;
+  opening_price: number;
+  high_price: number;
+  low_price: number;
+  trade_price: number;
+  prev_closing_price: number;
+  acc_trade_price: number;
+  change: 'RISE' | 'FALL';
+  signed_change_price: number;
+  change_rate: number;
+  signed_change_rate: number;
+  ask_bid: 'ASK' | 'BID';
+  trade_volume: number;
+  acc_trade_volume: number;
+  trade_date: string;
+  trade_time: string;
+  trade_timestamp: number;
+  acc_ask_volume: number;
+  acc_bid_volume: number;
+  highest_52_week_price: number;
+  highest_52_week_date: string;
+  lowest_52_week_price: number;
+  lowest_52_week_date: string;
+  market_state: 'ACTIVE' | 'INACTIVE';
+  is_trading_suspended: boolean;
+  delisting_date?: string;
+  market_warning: 'NONE' | string;
+  timestamp: number;
+  acc_trade_price_24h: number;
+  acc_trade_volume_24h: number;
+  stream_type: 'REALTIME';
+}
+
+function usePrevious<T>(value: T): T | undefined {
   const ref = useRef();
 
   useEffect(() => {
@@ -14,10 +55,10 @@ function usePrevious(value) {
 
 const SOCKET_URL = 'wss://api.upbit.com/websocket/v1';
 
-const useWebSocketTicker = targetMarketCodes => {
-  const socket = useRef(null);
+const useWebSocketTicker = (targetMarketCodes: MarketCode[]) => {
+  const socket = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [tickerData, setTickerData] = useState([]);
+  const [tickerData, setTickerData] = useState<Ticker[]>([]);
 
   useEffect(() => {
     if (targetMarketCodes.length === 0) {
@@ -34,13 +75,13 @@ const useWebSocketTicker = targetMarketCodes => {
         { type: 'ticker', codes: targetMarketCodes.map(code => code.market) },
         { format: 'DEFAULT' },
       ]);
-      socket.current.send(requestMessage);
+      socket.current!.send(requestMessage);
     };
 
-    const socketMessageHandler = event => {
+    const socketMessageHandler = (event: MessageEvent) => {
       const newData = JSON.parse(
         new TextDecoder('utf-8').decode(new Uint8Array(event.data))
-      );
+      ) as Ticker[];
 
       setTickerData(prevData => {
         const existingIndex = prevData.findIndex(
@@ -71,18 +112,18 @@ const useWebSocketTicker = targetMarketCodes => {
   return { isConnected, tickerData };
 };
 
-const CoinList = () => {
+const CoinList: React.FC = () => {
   const { isLoading, marketCodes } = useFetchMarketCode({ debug: true });
   const { isConnected, tickerData } = useWebSocketTicker(marketCodes);
   // console.log('marketCodes???? ', marketCodes);
-  const { socketData, setSelectedCoin, selectedCoin } = useStore();
+  const { setSelectedCoin, selectedCoin } = useStore<Ticker[]>();
   // console.log(selectedCoin);
 
   // console.log('???tickerData??? ', tickerData);
 
   const prevTickerData = usePrevious(tickerData);
-  const [sortOrder, setSortOrder] = useState(null);
-  const [imgSrc, setImgSrc] = useState(
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+  const [imgSrc, setImgSrc] = useState<string>(
     'https://cdn.upbit.com/upbit-web/images/ico_up_down_2.80e5420.png'
   );
 

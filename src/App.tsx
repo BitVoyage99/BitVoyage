@@ -1,5 +1,5 @@
 // import './App.css';
-import CoinList from './components/CoinList';
+import CoinList from './components/CoinList.tsx';
 
 function App() {
   return (
