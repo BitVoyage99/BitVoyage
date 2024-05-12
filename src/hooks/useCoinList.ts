@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { TickerSocketData } from '@/types/coin';
 
 /* // refactor
 const sortedData = useMemo(() => {
@@ -17,7 +18,10 @@ const sortedData = useMemo(() => {
 }, [tickerData, sortOrder]);
 //
  */
-export function useSortedData(tickerData, sortOrder) {
+export function useSortedData(
+  tickerData: TickerSocketData[],
+  sortOrder: 'asc' | 'desc' | null
+): TickerSocketData[] {
   return useMemo(() => {
     if (!tickerData) return [];
 
