@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import useFetchMarketCode from '../../hook/useFetchMarketCode.ts';
-import useStore from '../../stores/store.ts';
+// import useStore from '../../stores/store.ts';
+import { useMainStore } from '../../stores/main-store.ts';
 import useUpbitSocket from '@/hooks/useUpbitSocket';
 
 /* interface MarketCode {
@@ -9,7 +10,7 @@ import useUpbitSocket from '@/hooks/useUpbitSocket';
   english_name?: string;
 }
  */
-interface Ticker {
+/* interface Ticker {
   type: string;
   code: string;
   opening_price: number;
@@ -42,7 +43,7 @@ interface Ticker {
   acc_trade_price_24h: number;
   acc_trade_volume_24h: number;
   stream_type: 'REALTIME';
-}
+} */
 
 function usePrevious<T>(value: T): T | undefined {
   const ref = useRef();
@@ -58,7 +59,12 @@ const CoinList: React.FC = () => {
   const { isLoading, marketCodes } = useFetchMarketCode({ debug: true });
   // const { isConnected, tickerData } = useWebSocketTicker(marketCodes);
   // console.log('marketCodes???? ', marketCodes);
-  const { setSelectedCoin, selectedCoin } = useStore<Ticker[]>();
+  // const { setSelectedCoin, selectedCoin } = useStore<Ticker[]>();
+  // const { market, updateMarket } = useMainStore<Ticker[]>();
+  const { market, updateMarket } = useMainStore();
+  // console.log('market>>', market);
+
+  // const {}
   // console.log(selectedCoin);
 
   // console.log('???tickerData??? ', tickerData);
@@ -124,20 +130,11 @@ const CoinList: React.FC = () => {
     const currentTarget = marketCodes.filter(
       code => code.market === e.currentTarget.id
     );
-    setSelectedCoin(currentTarget);
-    // console.log('selectedCoin', selectedCoin[0].market);
-    // console.log('selectedCoin', selectedCoin);
+    // console.log('currentTarget?? ', currentTarget[0].market);
+
+    updateMarket(currentTarget[0].market);
+    // console.log(market, 'in event ??');
   }
-
-  /* 
-    const clickCoinHandler = (evt) => {
-    const currentTarget = marketCodes.filter(
-      (code) => code.market === evt.currentTarget.id
-    );
-    setSelectedCoin(currentTarget);
-  };
-
-  */
 
   /*  
 // 아이콘 용 임시
@@ -217,8 +214,7 @@ const LogoImage = marketCode => {
                 ? 'border border-solid border-blue-500'
                 : '';
 
-          const selectedClass =
-            selectedCoin[0].market === ticker.code ? 'bg-gray-200' : '';
+          const selectedClass = market === ticker.code ? 'bg-gray-200' : '';
 
           return (
             <li

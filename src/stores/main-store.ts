@@ -1,14 +1,14 @@
 import { create } from 'zustand';
 
-type State = {
+interface MarketState {
   market: string;
-};
+}
 
-type Actions = {
+interface MarketActions {
   updateMarket: (market: string) => void;
-};
+}
 
-export const useMainStore = create<State & Actions>(set => ({
+export const useMainStore = create<MarketState & MarketActions>(set => ({
   market: 'KRW-BTC',
   updateMarket: (market: string) => set(() => ({ market })),
 }));
