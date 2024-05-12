@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
+import React, { useEffect, useRef, useState, memo } from 'react';
 import useFetchMarketCode from '../../hook/useFetchMarketCode.ts';
 import useUpbitSocket from '@/hooks/useUpbitSocket';
+import { useSortedData } from '@/hooks/useCoinList.ts';
 import { useMainStore } from '../../stores/main-store.ts';
 
 /* interface MarketCode {
@@ -61,12 +62,6 @@ const CoinList: React.FC = () => {
   // const { setSelectedCoin, selectedCoin } = useStore<Ticker[]>();
   // const { market, updateMarket } = useMainStore<Ticker[]>();
   const { market, updateMarket } = useMainStore();
-  // console.log('market>>', market);
-
-  // const {}
-  // console.log(selectedCoin);
-
-  // console.log('???tickerData??? ', tickerData);
   const { tickerData } = useUpbitSocket();
   // console.log('새로운 tickerData? ', tickerData);
 
@@ -76,20 +71,7 @@ const CoinList: React.FC = () => {
     'https://cdn.upbit.com/upbit-web/images/ico_up_down_2.80e5420.png'
   );
 
-  const sortedData = useMemo(() => {
-    if (!tickerData) return [];
-
-    const data = [...tickerData];
-    // console.log('data?', data);
-    if (sortOrder === 'asc') {
-      data.sort((a, b) => a.acc_trade_price_24h - b.acc_trade_price_24h);
-      console.log();
-    } else if (sortOrder === 'desc') {
-      data.sort((a, b) => b.acc_trade_price_24h - a.acc_trade_price_24h);
-    }
-
-    return data;
-  }, [tickerData, sortOrder]);
+  const sortedData = useSortedData(tickerData, sortOrder);
 
   const toggleSortOrder = () => {
     setSortOrder(prevOrder => {
@@ -134,18 +116,6 @@ const CoinList: React.FC = () => {
     updateMarket(currentTarget[0].market);
     // console.log(market, 'in event ??');
   }
-
-  /*  
-// 아이콘 용 임시
-const LogoImage = marketCode => {
-    // console.log('marketCode??? ', marketCode);
-    const coinSymbol = marketCode.split('-')[1];
-    const logoImageUrl = `https://static.upbit.com/logos/${coinSymbol}.png`;
-
-    // return <img src={logoImageUrl} alt={`${coinSymbol} 로고`} />;
-    return logoImageUrl;
-  };
- */
 
   function getColorClass(changeType) {
     switch (changeType) {
@@ -202,8 +172,6 @@ const LogoImage = marketCode => {
 
       <ul className="h-5/6 overflow-y-auto">
         {sortedData.map((ticker, index) => {
-          // console.log('sortedData', sortedData);
-
           const prevTicker = prevTickerData?.find(t => t.code === ticker.code);
           const changeDirection = getChangeDirection(ticker, prevTicker);
           const changeClass =
@@ -222,12 +190,6 @@ const LogoImage = marketCode => {
               id={ticker.code}
               onClick={handleClickCoin}>
               <button className="flex justify-between items-center w-full h-full text-left">
-                {/* 아이콘 */}
-                {/* <img src={LogoImage(ticker.code)} alt={` 로고`} /> */}
-                {/* <i
-                className={`inline-block w-5 h-5 bg-[url(${LogoImage(ticker.code)})] bg-cover ml-1 mr-4`}></i> */}
-                {/* <i
-                className={`inline-block w-5 h-5 bg-[url('https://static.upbit.com/logos/${ticker.market.split('/')[0]}.png')] bg-cover ml-1 mr-4`}></i> */}
                 <div className="flex flex-col justify-center w-1/5 min-w-[55px]">
                   <strong className="block text-sm font-bold">
                     {/* {
