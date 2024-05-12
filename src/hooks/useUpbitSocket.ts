@@ -1,6 +1,6 @@
 import { UPBIT_SOCKET_URL } from '@/api/upbit';
 import useSocket from './useSocket';
-import useGetMarketCode from './useGetMarketCode';
+// import useGetMarketCode from './useGetMarketCode';
 import { useState } from 'react';
 import { useMainStore } from '@/stores/main-store';
 import useTickers from './useTickers';
@@ -12,6 +12,7 @@ import {
 import Adapter from '@/adapters/adapter';
 import OrderBookAdapter from '@/adapters/orderbook-adapter';
 import useGetPrevClosingPrice from './useGetPrevClosingPrice';
+import useFetchMarketCode from '@/hook/useFetchMarketCode.ts';
 
 type UpbitSocketData = TickerSocketData | OrderBookSocketData;
 
@@ -20,9 +21,11 @@ const useUpbitSocket = () => {
 
   const [selectedTicker, setSelectedTicker] = useState<TickerSocketData>();
   const [orderbookDetail, setOrderbookDetail] = useState<OrderBookDetailData>();
-  const { tickers, updateTicker } = useTickers();
+  const { tickerData, updateTicker } = useTickers();
 
-  const { data: allMarketCode } = useGetMarketCode();
+  const { marketCodes } = useFetchMarketCode({ debug: true });
+
+  // const { data: allMarketCode } = useGetMarketCode();
   const prevClosingPrice = useGetPrevClosingPrice();
 
   const parseArrayBuffer = (arrayBuffer: ArrayBuffer) => {
@@ -44,7 +47,7 @@ const useUpbitSocket = () => {
     ) {
       setSelectedTicker(upbitSocketData as TickerSocketData);
     } else if (upbitSocketData.type === 'ticker') {
-      updateTicker(upbitSocketData.code, upbitSocketData as TickerSocketData);
+      updateTicker(upbitSocketData as TickerSocketData);
     }
   };
 
@@ -56,7 +59,8 @@ const useUpbitSocket = () => {
   const message = [
     { ticket: 'UNIQUE_TICKET' },
     { type: 'orderbook', codes: [selectedMarket] },
-    { type: 'ticker', codes: allMarketCode },
+    { type: 'ticker', codes: marketCodes.map(code => code.market) },
+    // { type: 'ticker', codes: allMarketCode },
   ];
 
   useSocket({
@@ -66,7 +70,7 @@ const useUpbitSocket = () => {
     onMessage: handleMessage,
   });
 
-  return { selectedTicker, tickers, orderbookDetail };
+  return { selectedTicker, tickerData, orderbookDetail };
 };
 
 export default useUpbitSocket;

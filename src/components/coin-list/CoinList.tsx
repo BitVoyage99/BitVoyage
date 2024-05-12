@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
-import useFetchMarketCode from '../hook/useFetchMarketCode.ts';
-import useStore from '../stores/store.ts';
+import useFetchMarketCode from '../../hook/useFetchMarketCode.ts';
+import useStore from '../../stores/store.ts';
+import useUpbitSocket from '@/hooks/useUpbitSocket';
 
-interface MarketCode {
+/* interface MarketCode {
   market: string;
   korean_name: string;
   english_name?: string;
 }
-
+ */
 interface Ticker {
   type: string;
   code: string;
@@ -53,73 +54,16 @@ function usePrevious<T>(value: T): T | undefined {
   return ref.current;
 }
 
-const SOCKET_URL = 'wss://api.upbit.com/websocket/v1';
-
-const useWebSocketTicker = (targetMarketCodes: MarketCode[]) => {
-  const socket = useRef<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [tickerData, setTickerData] = useState<Ticker[]>([]);
-
-  useEffect(() => {
-    if (targetMarketCodes.length === 0) {
-      return;
-    }
-
-    socket.current = new WebSocket(SOCKET_URL);
-    socket.current.binaryType = 'arraybuffer';
-
-    const socketOpenHandler = () => {
-      setIsConnected(true);
-      const requestMessage = JSON.stringify([
-        { ticket: 'test' },
-        { type: 'ticker', codes: targetMarketCodes.map(code => code.market) },
-        { format: 'DEFAULT' },
-      ]);
-      socket.current!.send(requestMessage);
-    };
-
-    const socketMessageHandler = (event: MessageEvent) => {
-      const newData = JSON.parse(
-        new TextDecoder('utf-8').decode(new Uint8Array(event.data))
-      ) as Ticker[];
-
-      setTickerData(prevData => {
-        const existingIndex = prevData.findIndex(
-          item => item.code === newData.code
-        );
-        if (existingIndex > -1) {
-          // Replace the existing data with the new data
-          const updatedData = [...prevData];
-          updatedData[existingIndex] = newData;
-          return updatedData;
-        }
-        // If it's a new data, add it to the array
-        return [...prevData, newData];
-      });
-    };
-
-    socket.current.addEventListener('open', socketOpenHandler);
-    socket.current.addEventListener('message', socketMessageHandler);
-
-    return () => {
-      if (socket.current) {
-        socket.current.close();
-        setIsConnected(false);
-      }
-    };
-  }, [targetMarketCodes]);
-
-  return { isConnected, tickerData };
-};
-
 const CoinList: React.FC = () => {
   const { isLoading, marketCodes } = useFetchMarketCode({ debug: true });
-  const { isConnected, tickerData } = useWebSocketTicker(marketCodes);
+  // const { isConnected, tickerData } = useWebSocketTicker(marketCodes);
   // console.log('marketCodes???? ', marketCodes);
   const { setSelectedCoin, selectedCoin } = useStore<Ticker[]>();
   // console.log(selectedCoin);
 
   // console.log('???tickerData??? ', tickerData);
+  const { tickerData } = useUpbitSocket();
+  // console.log('새로운 tickerData? ', tickerData);
 
   const prevTickerData = usePrevious(tickerData);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
@@ -239,7 +183,6 @@ const LogoImage = marketCode => {
 
   return (
     <div className="sticky top-18 bg-white h-screen w-full overflow-hidden max-w-xl mx-auto">
-      <h1>{isConnected ? 'Connected' : 'Disconnected'}</h1>
       <h3 className="sr-only">코인 리스트</h3>
       <div className="flex w-full border-b border-gray-200">
         <input
@@ -263,6 +206,8 @@ const LogoImage = marketCode => {
 
       <ul className="h-5/6 overflow-y-auto">
         {sortedData.map((ticker, index) => {
+          // console.log('sortedData', sortedData);
+
           const prevTicker = prevTickerData?.find(t => t.code === ticker.code);
           const changeDirection = getChangeDirection(ticker, prevTicker);
           const changeClass =
@@ -290,10 +235,12 @@ const LogoImage = marketCode => {
                 className={`inline-block w-5 h-5 bg-[url('https://static.upbit.com/logos/${ticker.market.split('/')[0]}.png')] bg-cover ml-1 mr-4`}></i> */}
                 <div className="flex flex-col justify-center w-1/5 min-w-[55px]">
                   <strong className="block text-sm font-bold">
-                    {
+                    {/* {
                       marketCodes.filter(code => code.market === ticker.code)[0]
                         .korean_name
-                    }
+                    } */}
+                    {marketCodes.find(code => code.market === ticker.code)
+                      ?.korean_name || ''}
                   </strong>
                   <span className="block text-xs">
                     {/* {
@@ -308,7 +255,8 @@ const LogoImage = marketCode => {
                   {/* <div className={`border-b border-sky-500  ${changeClass}`}> */}
                   <strong
                     className={`block w-1/5 min-w-[55px] text-right align-middle text-sm font-bold ${getColorClass(ticker.change)}  `}>
-                    {ticker.trade_price.toLocaleString('ko-KR')}
+                    {/* {ticker.trade_price.toLocaleString('ko-KR')} */}
+                    {ticker.trade_price?.toLocaleString('ko-KR') || '-'}
                   </strong>
                 </div>
                 <div
@@ -318,7 +266,8 @@ const LogoImage = marketCode => {
                     {(ticker.signed_change_rate * 100).toFixed(2)}%
                   </span>
                   <span className="text-xs">
-                    {ticker.signed_change_price.toLocaleString('ko-KR')}
+                    {/* {ticker.signed_change_price.toLocaleString('ko-KR')} */}
+                    {ticker.signed_change_price?.toLocaleString('ko-KR') || '-'}
                   </span>
                 </div>
                 <span className="flex flex-col justify-center text-xs w-1/4 text-right">
