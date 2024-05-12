@@ -56,6 +56,48 @@ function usePrevious<T>(value: T): T | undefined {
 }
 
 // 순수함수는 밖으로 뺀다! : 리액트 컴포넌트 내에 위치시키면 렌더링될 때마다 실행시키기 때문이다
+function getColorClass(changeType) {
+  switch (changeType) {
+    case 'RISE':
+      return 'text-red-500';
+    case 'FALL':
+      return 'text-blue-500';
+    default:
+      return 'text-black';
+  }
+}
+
+function getChangeDirection(currentTicker, prevTicker) {
+  if (!prevTicker) return null;
+
+  const currentSignedChange = currentTicker.signed_change_price;
+  const prevSignedChange = prevTicker.signed_change_price;
+
+  // console.log(
+  //   `Current: ${currentSignedChange}, Previous: ${prevSignedChange}`
+  // );
+
+  if (currentSignedChange > prevSignedChange) {
+    return 'increased';
+  } else if (currentSignedChange < prevSignedChange) {
+    return 'decreased';
+  } else {
+    return 'unchanged';
+  }
+}
+
+function formatTradePriceToMillions(tradePrice) {
+  const MILLION = 1000000;
+  const tradePriceInMillions = Math.floor(tradePrice / MILLION);
+
+  const formatter = new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  });
+
+  const formattedPrice = formatter.format(tradePriceInMillions);
+
+  return `${formattedPrice}`;
+}
 
 const CoinList: React.FC = () => {
   const { isLoading, marketCodes } = useFetchMarketCode({ debug: true });
@@ -67,19 +109,6 @@ const CoinList: React.FC = () => {
 
   const { imgSrc, sortedData, toggleSortOrder } = useSortedData(tickerData);
 
-  function formatTradePriceToMillions(tradePrice) {
-    const MILLION = 1000000;
-    const tradePriceInMillions = Math.floor(tradePrice / MILLION);
-
-    const formatter = new Intl.NumberFormat('en-US', {
-      maximumFractionDigits: 0,
-    });
-
-    const formattedPrice = formatter.format(tradePriceInMillions);
-
-    return `${formattedPrice}`;
-  }
-
   function handleClickCoin(e) {
     console.log('coin clicked!');
     const currentTarget = marketCodes.filter(
@@ -89,36 +118,6 @@ const CoinList: React.FC = () => {
 
     updateMarket(currentTarget[0].market);
     // console.log(market, 'in event ??');
-  }
-
-  function getColorClass(changeType) {
-    switch (changeType) {
-      case 'RISE':
-        return 'text-red-500';
-      case 'FALL':
-        return 'text-blue-500';
-      default:
-        return 'text-black';
-    }
-  }
-
-  function getChangeDirection(currentTicker, prevTicker) {
-    if (!prevTicker) return null;
-
-    const currentSignedChange = currentTicker.signed_change_price;
-    const prevSignedChange = prevTicker.signed_change_price;
-
-    // console.log(
-    //   `Current: ${currentSignedChange}, Previous: ${prevSignedChange}`
-    // );
-
-    if (currentSignedChange > prevSignedChange) {
-      return 'increased';
-    } else if (currentSignedChange < prevSignedChange) {
-      return 'decreased';
-    } else {
-      return 'unchanged';
-    }
   }
 
   if (isLoading) {
