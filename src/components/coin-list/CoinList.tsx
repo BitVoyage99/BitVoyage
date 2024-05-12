@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState, memo } from 'react';
 import useFetchMarketCode from '../../hook/useFetchMarketCode.ts';
-// import useStore from '../../stores/store.ts';
-import { useMainStore } from '../../stores/main-store.ts';
 import useUpbitSocket from '@/hooks/useUpbitSocket';
+import { useMainStore } from '../../stores/main-store.ts';
 
 /* interface MarketCode {
   market: string;
@@ -122,7 +121,7 @@ const CoinList: React.FC = () => {
 
     const formattedPrice = formatter.format(tradePriceInMillions);
 
-    return `${formattedPrice} 백만`;
+    return `${formattedPrice}`;
   }
 
   function handleClickCoin(e) {
@@ -189,7 +188,7 @@ const LogoImage = marketCode => {
         />
         <button className="w-8 h-8 bg-no-repeat bg-[url('https://cdn.upbit.com/images/bg.e801517.png')] bg--83px_2px" />
       </div>
-      <div className="flex justify-between items-center bg-white w-full h-8 border-b border-gray-200 text-sm font-bold text-gray-600">
+      <div className="flex justify-between items-center bg-slate-50 w-full h-8 text-xs font-bold text-gray-600  border-y-zinc-300">
         <div className="w-12 pl-2 text-left">한글명</div>
         <div className="flex-1 text-right pr-2">현재가</div>
         <div className="flex-1 text-right pr-2">전일 대비</div>
@@ -218,7 +217,7 @@ const LogoImage = marketCode => {
 
           return (
             <li
-              className={`border-b border-gray-200 ${selectedClass} hover:bg-gray-200`}
+              className={`py-1 px-3 border-b-[0.5px] border-solid border-y-zinc-200 ${selectedClass} hover:bg-gray-200`}
               key={index}
               id={ticker.code}
               onClick={handleClickCoin}>
@@ -238,7 +237,7 @@ const LogoImage = marketCode => {
                     {marketCodes.find(code => code.market === ticker.code)
                       ?.korean_name || ''}
                   </strong>
-                  <span className="block text-xs">
+                  <span className="block text-xs text-gray-600">
                     {/* {
                     marketCodes.filter(code => code.market === ticker.code)[0]
                       .market
@@ -266,8 +265,9 @@ const LogoImage = marketCode => {
                     {ticker.signed_change_price?.toLocaleString('ko-KR') || '-'}
                   </span>
                 </div>
-                <span className="flex flex-col justify-center text-xs w-1/4 text-right">
+                <span className="text-xs w-1/4 text-right">
                   {formatTradePriceToMillions(ticker.acc_trade_price_24h)}
+                  <span className="text-gray-500">백만</span>
                 </span>
               </button>
             </li>
