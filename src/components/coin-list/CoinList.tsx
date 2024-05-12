@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, memo } from 'react';
-import useFetchMarketCode from '../../hook/useFetchMarketCode.ts';
+import useFetchMarketCode from '@/hooks/useFetchMarketCode.ts';
 import useUpbitSocket from '@/hooks/useUpbitSocket';
 import { useSortedData } from '@/hooks/useCoinList.ts';
 import { useMainStore } from '../../stores/main-store.ts';
@@ -200,19 +200,12 @@ const CoinList: React.FC = () => {
                       ?.korean_name || ''}
                   </strong>
                   <span className="block text-xs text-gray-600">
-                    {/* {
-                    marketCodes.filter(code => code.market === ticker.code)[0]
-                      .market
-                  } */}
                     {ticker.code}
                   </span>
                 </div>
                 <div className={`${changeClass}`}>
-                  {/* <div className={`border border-solid ${changeClass}`}> */}
-                  {/* <div className={`border-b border-sky-500  ${changeClass}`}> */}
                   <strong
                     className={`block w-1/5 min-w-[55px] text-right align-middle text-sm font-bold ${getColorClass(ticker.change)}  `}>
-                    {/* {ticker.trade_price.toLocaleString('ko-KR')} */}
                     {ticker.trade_price?.toLocaleString('ko-KR') || '-'}
                   </strong>
                 </div>
@@ -223,7 +216,6 @@ const CoinList: React.FC = () => {
                     {(ticker.signed_change_rate * 100).toFixed(2)}%
                   </span>
                   <span className="text-xs">
-                    {/* {ticker.signed_change_price.toLocaleString('ko-KR')} */}
                     {ticker.signed_change_price?.toLocaleString('ko-KR') || '-'}
                   </span>
                 </div>

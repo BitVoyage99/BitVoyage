@@ -12,7 +12,7 @@ import {
 import Adapter from '@/adapters/adapter';
 import OrderBookAdapter from '@/adapters/orderbook-adapter';
 import useGetPrevClosingPrice from './useGetPrevClosingPrice';
-import useFetchMarketCode from '@/hook/useFetchMarketCode.ts';
+import useFetchMarketCode from '@/hooks/useFetchMarketCode';
 
 type UpbitSocketData = TickerSocketData | OrderBookSocketData;
 
