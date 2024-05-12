@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, memo } from 'react';
+import React, { useEffect, useRef, memo } from 'react';
 import useFetchMarketCode from '@/hooks/useFetchMarketCode.ts';
 import useUpbitSocket from '@/hooks/useUpbitSocket';
 import { useSortedData } from '@/hooks/useCoinList.ts';
@@ -55,43 +55,17 @@ function usePrevious<T>(value: T): T | undefined {
   return ref.current;
 }
 
+// 순수함수는 밖으로 뺀다! : 리액트 컴포넌트 내에 위치시키면 렌더링될 때마다 실행시키기 때문이다
+
 const CoinList: React.FC = () => {
   const { isLoading, marketCodes } = useFetchMarketCode({ debug: true });
-  // const { isConnected, tickerData } = useWebSocketTicker(marketCodes);
-  // console.log('marketCodes???? ', marketCodes);
-  // const { setSelectedCoin, selectedCoin } = useStore<Ticker[]>();
-  // const { market, updateMarket } = useMainStore<Ticker[]>();
   const { market, updateMarket } = useMainStore();
   const { tickerData } = useUpbitSocket();
   // console.log('새로운 tickerData? ', tickerData);
 
   const prevTickerData = usePrevious(tickerData);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-  const [imgSrc, setImgSrc] = useState<string>(
-    'https://cdn.upbit.com/upbit-web/images/ico_up_down_2.80e5420.png'
-  );
 
-  const sortedData = useSortedData(tickerData, sortOrder);
-
-  const toggleSortOrder = () => {
-    setSortOrder(prevOrder => {
-      return prevOrder === 'asc' ? 'desc' : 'asc';
-    });
-
-    if (sortOrder === 'asc') {
-      setImgSrc(
-        'https://cdn.upbit.com/upbit-web/images/ico_up_down_1.af5ac5a.png'
-      );
-    } else if (sortOrder === 'desc') {
-      setImgSrc(
-        'https://cdn.upbit.com/upbit-web/images/ico_up_down_2.80e5420.png'
-      );
-    }
-  };
-
-  if (isLoading) {
-    return <div>Loading market codes...</div>;
-  }
+  const { imgSrc, sortedData, toggleSortOrder } = useSortedData(tickerData);
 
   function formatTradePriceToMillions(tradePrice) {
     const MILLION = 1000000;
@@ -147,18 +121,21 @@ const CoinList: React.FC = () => {
     }
   }
 
+  if (isLoading) {
+    return <div>Loading market codes...</div>;
+  }
   return (
     <div className="sticky top-18 bg-white h-screen w-full overflow-hidden max-w-xl mx-auto">
       <h3 className="sr-only">코인 리스트</h3>
-      <div className="flex w-full border-b border-gray-200">
+      {/* <div className="flex w-full border-b border-gray-200">
         <input
           type="search"
           className="flex-1 border-none p-1 pl-3 text-sm placeholder-gray-500 font-bold"
           placeholder="코인명/심볼검색"
         />
         <button className="w-8 h-8 bg-no-repeat bg-[url('https://cdn.upbit.com/images/bg.e801517.png')] bg--83px_2px" />
-      </div>
-      <div className="flex justify-between items-center bg-slate-50 w-full h-8 text-xs font-bold text-gray-600  border-y-zinc-300">
+      </div> */}
+      <div className="flex justify-between items-center px-3 bg-slate-50 w-full h-8 text-xs font-bold text-gray-600  border-y-zinc-300">
         <div className="w-12 pl-2 text-left">한글명</div>
         <div className="flex-1 text-right pr-2">현재가</div>
         <div className="flex-1 text-right pr-2">전일 대비</div>
