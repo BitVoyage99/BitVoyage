@@ -1,5 +1,6 @@
 import useUpbitSocket from '@/hooks/useUpbitSocket';
 import OrderbookDetail from './orderbook/orderbook-detail';
+import Chart from '@/Chart';
 
 const Home = () => {
   const { orderbookDetail } = useUpbitSocket();
@@ -10,6 +11,7 @@ const Home = () => {
       <main className="pt-16 border-green-300 border-2 w-[95%] mx-auto flex justify-between items-start relative ">
         <div className="w-1/2">
           <OrderbookDetail orderbookDetail={orderbookDetail} />
+          <Chart />
         </div>
 
         <div className="sticky top-16"></div>

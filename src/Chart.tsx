@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import {
-  createChart,
-  IChartApi,
-  ISeriesApi,
-  MouseEventParams,
-} from 'lightweight-charts';
+import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
 import useNewData from './hooks/useNewData';
 import ChartDataAdapter from './adapters/chartDataAdapter';
 
@@ -81,6 +76,15 @@ const Chart = () => {
       });
 
       // 해당 가격 축의 설정을 조정
+      chartRef.current.priceScale(candleScaleId).applyOptions({
+        autoScale: true,
+      });
+      chartRef.current.priceScale(volumeScaleId).applyOptions({
+        scaleMargins: {
+          top: 0.8,
+          bottom: 0,
+        },
+      });
       chartRef.current.priceScale(priceScaleId).applyOptions({
         autoScale: true,
         invertScale: false,
@@ -175,13 +179,16 @@ const Chart = () => {
     tooltip.style.position = 'fixed';
     document.body.appendChild(tooltip);
 
-    chart.subscribeCrosshairMove(function (
-      param: MouseEventParams<'Candlestick'>
-    ) {
+    chart.subscribeCrosshairMove(param => {
+      const x = param.point?.x;
+      const data = param.seriesData.get(series);
+      const price = data.value !== undefined ? data.value : data.close;
+      const y = series.priceToCoordinate(price);
+      console.log(`The data point is at position: ${x}, ${y}`);
       if (
         !param.time ||
         param.point === undefined ||
-        !param.seriesPrices ||
+        !param.price ||
         !param.seriesPrices.get(series)
       ) {
         tooltip.style.display = 'none';
@@ -267,20 +274,20 @@ const Chart = () => {
   };
 
   const handleZoom = () => {
-    if (chartRef.current) {
-      const range = chartRef.current?.timeScale().getVisibleLogicalRange();
-      console.log('책정된 range:', range);
-      if (
-        range &&
-        (range.from !== lastRangeRef.current.from ||
-          range.to !== lastRangeRef.current.to)
-      ) {
-        const count = Math.ceil((range.to - range.from) * 1.5);
-        //TODO updateData 로 변경 필요
-        fetchData(count);
-        lastRangeRef.current = { from: range.from, to: range.to };
-      }
+    // if (chartRef.current) {
+    const range = chartRef.current?.timeScale().getVisibleLogicalRange();
+    console.log('책정된 range:', range);
+    if (
+      range &&
+      (range.from !== lastRangeRef.current.from ||
+        range.to !== lastRangeRef.current.to)
+    ) {
+      const count = Math.ceil((range.to - range.from) * 1.5);
+      //TODO updateData 로 변경 필요
+      fetchData(count);
+      lastRangeRef.current = { from: range.from, to: range.to };
     }
+    // }
   };
 
   const zoomIn = () => {
@@ -318,12 +325,56 @@ const Chart = () => {
     }
   };
 
+  const handleUnitChange = (event: string) => {
+    setUnit(event);
+    setChartRange(event);
+  };
+  const setTimeScaleFormatter = (event: string) => {
+    if (chartRef.current) {
+      chartRef.current.timeScale().applyOptions({
+        timeVisible: true,
+        secondsVisible: false,
+        tickMarkFormatter: time => {
+          const date = new Date(time * 1000);
+          if (['day', 'weeks', 'month'].includes(event)) {
+            return date.toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+            });
+            // } else {
+            //   // minute or hour
+            //   return date.toLocaleTimeString(undefined, {
+            //     hour: '2-digit',
+            //     minute: '2-digit',
+            //     hour12: false,
+            //   });
+            // }
+          } else if (['hour'].includes(event)) {
+            return date.toLocaleTimeString(undefined, {
+              hour: '2-digit',
+              hour12: false,
+            });
+          } else if (['minute'].includes(event)) {
+            return date.toLocaleTimeString(undefined, {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            });
+          } else {
+            return date.toLocaleString();
+          }
+        },
+      });
+    }
+  };
+
   const setChartRange = (event: string) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Set time to midnight
     const timeScale = chartRef.current?.timeScale();
     if (timeScale) {
       let from, to;
+
       switch (event) {
         case 'day':
           from = now;
@@ -337,56 +388,60 @@ const Chart = () => {
           from = new Date(now.getFullYear(), now.getMonth(), 1);
           to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
           break;
+        case 'hour':
+          // 예제대로 2시간 값만 표시하게 설정
+          // For minute and hour, just set a range from now to 2 hours later as example
+          // from = new Date();
+          // to = new Date(now.getTime() + 2 * 3600 * 1000);
+          //24시간으로 설정
+          // Set range for the next 24 hours
+          from = new Date(); // Current time
+          to = new Date(from.getTime() + 24 * 60 * 60 * 1000); // 24 hours later
+          break;
+        case 'minute':
+          from = new Date(); // Current time
+          to = new Date(from.getTime() + 60 * 60 * 1000); // 60 minutes later
+          break;
         default:
-          from = now;
-          to = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Default to 1 day range
+          from = new Date(now.setHours(0, 0, 0, 0)); // Midnight today
+          to = new Date(from.getTime() + 24 * 60 * 60 * 1000 - 1); // Just before midnight
           break;
       }
-      timeScale.setVisibleRange({
-        from: from.getTime() / 1000,
-        to: to.getTime() / 1000,
-      });
+
+      // if (chartRef.current) {
+      //   chartRef.current.timeScale().setVisibleRange({
+      //     from: from.getTime() / 1000,
+      //     to: to.getTime() / 1000,
+      //   });
+      //   // Adjust the time scale to show each tick as one day
+      //   chartRef.current.timeScale().applyOptions({
+      //     timeVisible: true,
+      //     tickMarkFormatter: time => {
+      //       const date = new Date(time * 1000);
+      //       return date.toLocaleDateString(undefined, {
+      //         month: 'short',
+      //         day: 'numeric',
+      //       });
+      //     },
+      //   });
+      // }
+      if (chartRef.current) {
+        chartRef.current.timeScale().setVisibleRange({
+          from: from.getTime() / 1000,
+          to: to.getTime() / 1000,
+        });
+        setTimeScaleFormatter(event);
+      }
     }
   };
-
   return (
     <div>
       <div ref={chartContainerRef} />
-      <button
-        onClick={() => {
-          setUnit('minute');
-          setChartRange('minute');
-        }}>
-        분
-      </button>
-      <button
-        onClick={() => {
-          setUnit('hour');
-          setChartRange('hour');
-        }}>
-        시간
-      </button>
-      <button
-        onClick={() => {
-          setUnit('day');
-          setChartRange('day');
-        }}>
-        일
-      </button>
-      <button
-        onClick={() => {
-          setUnit('weeks');
-          setChartRange('weeks');
-        }}>
-        주
-      </button>
-      <button
-        onClick={() => {
-          setUnit('month');
-          setChartRange('month');
-        }}>
-        월
-      </button>
+      <button onClick={() => handleUnitChange('minute')}>Minute</button>
+      <button onClick={() => handleUnitChange('hour')}>Hour</button>
+      <button onClick={() => handleUnitChange('day')}>Day</button>
+      <button onClick={() => handleUnitChange('weeks')}>Week</button>
+      <button onClick={() => handleUnitChange('month')}>Month</button>
 
       {/* <dropdown overlay={menu} trigger={['click']}>
         <button>
@@ -404,5 +459,4 @@ const Chart = () => {
     </div>
   );
 };
-
 export default Chart;
