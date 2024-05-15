@@ -1,11 +1,13 @@
+import { Logger } from "@nestjs/common";
 import {
   SubscribeMessage,
   WebSocketGateway,
   ConnectedSocket,
   MessageBody,
   WebSocketServer,
+  OnGatewayConnection,  
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import * as WebSocket from 'ws';
 import { firstValueFrom } from 'rxjs';
 import { CandlesService } from 'src/candles/candles.service';
@@ -14,18 +16,13 @@ import { MarketsService } from 'src/markets/markets.service';
 import { TickerService } from 'src/ticker/ticker.service';
 import OrderBookAdapter from './dto/orderbook.dto';
 import TickersAdapter from './dto/tickers.dto';
-
-@WebSocketGateway({
-  cors: {
-    origin: 'http://localhost:5173',
-    methods: ['GET'],
-  },
-  namespace: 'upbit',
-})
-export class UpbitGateway {
+    
+@WebSocketGateway({ namespace: '/upbit' })
+export class UpbitGateway implements OnGatewayConnection  {
+    private logger = new Logger("chat");
   @WebSocketServer() server: Server;
   private ws: WebSocket;
-
+  
   constructor(
     private tickerService: TickerService,
     private candleService: CandlesService,
@@ -33,6 +30,10 @@ export class UpbitGateway {
   ) {
     this.connectToUpbit();
   }
+
+  handleConnection(@ConnectedSocket() socket: Socket) {
+    this.logger.log(`connect ${socket.id} ${socket.nsp.name}`);
+}  
 
   connectToUpbit() {
     this.ws = new WebSocket('wss://api.upbit.com/websocket/v1', {});
@@ -47,6 +48,8 @@ export class UpbitGateway {
     // const lastMinuteCandleData = await firstValueFrom(
     //   this.candleService.getLastMinuteCandle('KRW-BTC'),
     // );
+
+    console.log('market : ',market);
 
     const allMarketCodes = await firstValueFrom(
       this.marketService.getAllMarketCodes(),
