@@ -1,0 +1,55 @@
+{
+  "name": "@mswjs/cookies",
+  "version": "1.1.0",
+  "description": "Manage request/response cookies in the environments where those are not supported.",
+  "main": "lib/index.js",
+  "module": "lib/index.mjs",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "require": "./lib/index.js",
+      "default": "./lib/index.mjs"
+    }
+  },
+  "scripts": {
+    "start": "tsup --watch",
+    "test": "jest",
+    "clean": "rimraf lib",
+    "build": "yarn clean && tsup",
+    "release": "release publish",
+    "prepack": "yarn build",
+    "prepare": "yarn simple-git-hooks init",
+    "prepublishOnly": "yarn test"
+  },
+  "repository": "git@github.com:mswjs/cookies.git",
+  "author": "Artem Zakharchenko",
+  "license": "MIT",
+  "files": [
+    "README.md",
+    "lib"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^16.0.3",
+    "@commitlint/config-conventional": "^16.0.0",
+    "@ossjs/release": "^0.8.0",
+    "@types/jest": "^29.5.7",
+    "@types/set-cookie-parser": "^2.4.5",
+    "commitizen": "^4.2.4",
+    "cz-conventional-changelog": "^3.3.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "jest-environment-miniflare": "^2.14.1",
+    "rimraf": "^5.0.5",
+    "set-cookie-parser": "^2.6.0",
+    "simple-git-hooks": "^2.7.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "tsup": "^6.2.3",
+    "typescript": "^5.2.2",
+    "whatwg-fetch": "^3.6.19"
+  }
+}
