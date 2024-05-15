@@ -5,7 +5,6 @@ import CoinList from './coin-list/CoinList';
 
 const Home = () => {
   const { orderbookDetail, selectedTicker } = useUpbitSocket();
-  console.log('data: ' + selectedTicker);
 
   return (
     <div className="w-full min-h-screen bg-slate-200">
