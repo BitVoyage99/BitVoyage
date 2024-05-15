@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { TickerSocketData } from '@/types/coin';
 
-/* // refactor
+/* // refactoring
 const sortedData = useMemo(() => {
   if (!tickerData) return [];
 
