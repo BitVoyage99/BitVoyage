@@ -1,5 +1,6 @@
 import useUpbitSocket from '@/hooks/useUpbitSocket';
 import OrderbookDetail from './orderbook/orderbook-detail';
+import CoinList from './coin-list/CoinList';
 
 const Home = () => {
   const { orderbookDetail } = useUpbitSocket();
@@ -11,7 +12,9 @@ const Home = () => {
         <div className="w-1/2">
           <OrderbookDetail orderbookDetail={orderbookDetail} />
         </div>
-
+        <div className="w-1/2">
+          <CoinList />
+        </div>
         <div className="sticky top-16"></div>
       </main>
     </div>
