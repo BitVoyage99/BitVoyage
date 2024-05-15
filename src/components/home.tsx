@@ -1,6 +1,7 @@
 import useUpbitSocket from '@/hooks/useUpbitSocket';
 import OrderbookDetail from './orderbook/orderbook-detail';
 import Chart from '@/Chart';
+import CoinList from './coin-list/CoinList';
 
 const Home = () => {
   const { orderbookDetail, selectedTicker } = useUpbitSocket();
@@ -14,7 +15,9 @@ const Home = () => {
           <OrderbookDetail orderbookDetail={orderbookDetail} />
           <Chart selectedTicker={selectedTicker} />
         </div>
-
+        <div className="w-1/2">
+          <CoinList />
+        </div>
         <div className="sticky top-16"></div>
       </main>
     </div>

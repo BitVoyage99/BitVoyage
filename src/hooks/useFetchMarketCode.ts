@@ -11,7 +11,7 @@ interface MarketCode {
 function useFetchMarketCode(option = { debug: false }) {
   const REST_API_URL = 'https://api.upbit.com/v1/market/all?isDetails=false';
 
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // const [isLoading, setIsLoading] = useState<boolean>(true);
   const [marketCodes, setMarketCodes] = useState<MarketCode[]>([]);
 
   const fetchMarketCodes = async () => {
@@ -38,7 +38,7 @@ function useFetchMarketCode(option = { debug: false }) {
     } catch (error) {
       console.error('Error fetching market codes:', error);
     } finally {
-      setIsLoading(false);
+      // setIsLoading(false);
     }
   };
 
@@ -48,7 +48,7 @@ function useFetchMarketCode(option = { debug: false }) {
     });
   }, []);
 
-  return { isLoading, marketCodes };
+  return { marketCodes };
 }
 
 export default useFetchMarketCode;
