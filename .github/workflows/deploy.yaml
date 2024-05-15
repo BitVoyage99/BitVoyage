@@ -1,0 +1,37 @@
+name: Bit-Voyage
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - run: docker build -t leehyeonseop/react-test-app -f ./frontend/Dockerfile.dev ./frontend
+      # - run: docker run -e CI=true smileajw1004/react-test-app npm test
+
+      - run: docker build -t leehyeonseop/docker-frontend ./frontend
+      - run: docker build -t leehyeonseop/docker-nginx ./nginx
+      - run: docker build -t leehyeonseop/docker-backend ./backend
+
+      - run: docker push leehyeonseop/docker-frontend
+      - run: docker push leehyeonseop/docker-nginx
+      - run: docker push leehyeonseop/docker-backend
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: bit-voyage
+          environment_name: Bit-voyage-env
+          existing_bucket_name: elasticbeanstalk-ap-northeast-2-541364597282
+          region: ap-northeast-2
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
