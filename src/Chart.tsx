@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
-import useNewData from './hooks/useNewData';
+//import useNewData from './hooks/useNewData';
 import ChartDataAdapter from './adapters/chartDataAdapter';
+import { TickerData } from '@/types/coin';
 
-const Chart = () => {
+interface Props {
+  selectedTicker?: TickerData;
+}
+
+const Chart = ({ selectedTicker }: Props) => {
   const [unit, setUnit] = useState('minute'); // 'minute', 'hour', 'day', 'month'
   const [marketCode, setMarketCode] = useState(['KRW-BTC']);
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -16,7 +21,9 @@ const Chart = () => {
   const trendLineSeriesRef = useRef<ISeriesApi<'Line'> | null>(null); // Added for trend line
   //소켓, url 요청시 종목(market)을 전역변수화시키자.
   //const newData = useNewData();
-  const newData = useNewData(marketCode);
+  //const newData = useNewData(marketCode);
+  const newData = selectedTicker;
+  console.log('data: ' + selectedTicker);
 
   const lastRangeRef = useRef({ from: 0, to: 0 });
 
@@ -180,11 +187,6 @@ const Chart = () => {
     document.body.appendChild(tooltip);
 
     chart.subscribeCrosshairMove(param => {
-      const x = param.point?.x;
-      const data = param.seriesData.get(series);
-      const price = data.value !== undefined ? data.value : data.close;
-      const y = series.priceToCoordinate(price);
-      console.log(`The data point is at position: ${x}, ${y}`);
       if (
         !param.time ||
         param.point === undefined ||
