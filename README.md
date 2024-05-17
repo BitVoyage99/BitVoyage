@@ -2,9 +2,9 @@
 
 비트코인 거래량 차트 렌더링의 여정
 
-  <img alt="팀아이콘_흑" src="![팀아이콘_bitvoyage](https://github.com/BitVoyage99/BitVoyage/assets/18062098/5a829827-d5e9-4a36-a382-9750b19b47cd)"/>  
-  <img alt="팀아이콘_백" src="![KakaoTalk_Photo_2024-05-18-00-57-29](https://github.com/BitVoyage99/BitVoyage/assets/18062098/8c2eb7f5-af13-484c-a528-b6ed2cf6bf84)"/>
-  <img alt="팀아이콘_흑파" src="![image](https://github.com/BitVoyage99/BitVoyage/assets/18062098/cfadb44a-bebc-4e1d-9a9a-afa9c7e9ab32)"/>
+<img alt="팀아이콘_흑" width="300" src="https://github.com/BitVoyage99/demo-repository/assets/18062098/df24458f-2d10-4932-af58-3e0a813037f7">
+<img alt="팀아이콘_파흑" width="300" src="https://github.com/BitVoyage99/demo-repository/assets/18062098/0e7117df-c624-40e6-a02b-adbfa41e168b">
+<img alt="팀아이콘_파흑" width="300" src="https://github.com/BitVoyage99/demo-repository/assets/18062098/3d1bfe89-773a-44ec-94b6-a11eb63e068d">
 
 ## Demo 
 <a href="http://bit-voyage-env.eba-93pip9c5.ap-northeast-2.elasticbeanstalk.com/">AWS링크</a>
@@ -43,12 +43,24 @@ zustand를 사용한 전역 상태 관리
 <img width="565" alt="현재가 차트" src="https://github.com/BitVoyage99/BitVoyage/assets/18062098/9854bacf-5dbe-4968-8655-c4ef97900329">
 
 ## 우린 이런 문제를 해결 했어요!
+<a href="https://imported-cloth-53f.notion.site/1-42c3f5c8fdb34011b5c5fc2987a96add?pvs=4">성능 저하 및 사용자 경험 약화 이슈</a>
+
+-----
+
+<a href="https://imported-cloth-53f.notion.site/2-8dc9a1acd3ac4c3ea80bdded0a0c4629?pvs=4">실시간 데이터 통합 및 관리</a>
+
+-----
+
+<a href="https://imported-cloth-53f.notion.site/3-5f3c498d56124dd59ced657fea0a7a9e?pvs=4">복잡한 데이터 설정 처리</a>
+
+-----
 
 
 ## 개발 기간
 * 2024.04.22 ~ 2024.05.18
 
-## 마일스톤
+## 팀원 및 역할
+<img  alt="팀원역할" src="https://github.com/BitVoyage99/demo-repository/assets/18062098/be0dd15f-2544-46b2-a078-14c4375a3d32">
 
 # 기술 Stack 및 개발환경
 
@@ -56,7 +68,7 @@ zustand를 사용한 전역 상태 관리
 vscode
 
 ## Config
-npm, axios, AWS elasticbeanstalk
+npm, axios, AWS elasticbeanstalk, eslint, prettier
 
 ## Development
 Javascript, typescript, reat, vite,  
