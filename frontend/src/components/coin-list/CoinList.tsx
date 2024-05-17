@@ -110,7 +110,7 @@ const CoinList: React.FC = () => {
   const { imgSrc, sortedData, toggleSortOrder } = useSortedData(tickerData);
 
   function handleClickCoin(e) {
-    console.log('coin clicked!');
+    // console.log('coin clicked!');
     const currentTarget = marketCodes.filter(
       code => code.market === e.currentTarget.id
     );
@@ -124,7 +124,7 @@ const CoinList: React.FC = () => {
     return <div>Loading market codes...</div>;
   }
   return (
-    <div className="sticky top-18 bg-white h-screen w-full overflow-hidden max-w-xl mx-auto">
+    <div className="sticky top-18 bg-white h-screen w-full overflow-hidden">
       <h3 className="sr-only">코인 리스트</h3>
       {/* <div className="flex w-full border-b border-gray-200">
         <input
@@ -146,7 +146,7 @@ const CoinList: React.FC = () => {
         </div>
       </div>
 
-      <ul className="h-5/6 overflow-y-auto">
+      <ul className="overflow-y-auto h-full">
         {sortedData.map((ticker, index) => {
           const prevTicker = prevTickerData?.find(t => t.code === ticker.code);
           const changeDirection = getChangeDirection(ticker, prevTicker);
