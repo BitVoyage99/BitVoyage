@@ -1,7 +1,10 @@
-# BitVoyage99
+# BitVoyage.shop
 
 비트코인 거래량 차트 렌더링의 여정
 
+  <img alt="팀아이콘_흑" src="![팀아이콘_bitvoyage](https://github.com/BitVoyage99/BitVoyage/assets/18062098/5a829827-d5e9-4a36-a382-9750b19b47cd)"/>  
+  <img alt="팀아이콘_백" src="![KakaoTalk_Photo_2024-05-18-00-57-29](https://github.com/BitVoyage99/BitVoyage/assets/18062098/8c2eb7f5-af13-484c-a528-b6ed2cf6bf84)"/>
+  <img alt="팀아이콘_흑파" src="![image](https://github.com/BitVoyage99/BitVoyage/assets/18062098/cfadb44a-bebc-4e1d-9a9a-afa9c7e9ab32)"/>
 
 ## Demo 
 <a href="http://bit-voyage-env.eba-93pip9c5.ap-northeast-2.elasticbeanstalk.com/">AWS링크</a>
@@ -9,10 +12,10 @@
 ## 프로젝트 소개
  * 비트코인 거래량 차트 렌더링의 여정
 
-⭐ Upit 웹소켓 실제 거래 데이터를 통해 많은 데이터 수신시 프론트엔드의 뷰를 최적화하는 방법 학습
+⭐ 목표 : Upit 웹소켓 실제 거래 데이터를 통해 많은 데이터 수신시 프론트엔드의 뷰를 최적화하는 방법 학습
 
-React와 TypeScript로 개발된 실시간 암호화폐 거래 정보 웹 애플리케이션.
-Upbit API 활용하여실시간 시세 정보와 호가 정보를 제공하며, WebSocket을 통해 데이터를 실시간으로 업데이트.
+ - React와 TypeScript로 개발된 실시간 암호화폐 거래 정보 웹 애플리케이션.
+ - Upbit API 활용하여실시간 시세 정보와 호가 정보를 제공하며, WebSocket을 통해 데이터를 실시간으로 업데이트.
 
 ## 주요 기능 소개
 
@@ -39,22 +42,26 @@ zustand를 사용한 전역 상태 관리
 #### 현재가 차트
 <img width="565" alt="현재가 차트" src="https://github.com/BitVoyage99/BitVoyage/assets/18062098/9854bacf-5dbe-4968-8655-c4ef97900329">
 
+## 우린 이런 문제를 해결 했어요!
+
 
 ## 개발 기간
 * 2024.04.22 ~ 2024.05.18
 
-#### 기술 Stack 및 개발환경
+## 마일스톤
 
-# Environment 
+# 기술 Stack 및 개발환경
+
+## Environment 
 vscode
 
-# Config
+## Config
 npm, axios, AWS elasticbeanstalk
 
-# Development
+## Development
 Javascript, typescript, reat, vite,  
 
-# Communication
+## Communication
 Slack, Notion, Zep
 
 # React + TypeScript + Vite
