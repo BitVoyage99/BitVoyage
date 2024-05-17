@@ -1,4 +1,4 @@
-import { NewDataMessage } from '../types/types.ts';
+import { NewDataMessage } from '@/types/types.ts';
 
 class NewDataAdapter {
   private message;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { createChart, IChartApi, ISeriesApi } from 'lightweight-charts';
 //import useNewData from './hooks/useNewData';
-import ChartDataAdapter from './adapters/chartDataAdapter';
+import ChartDataAdapter from '@/adapters/chartDataAdapter';
 import { TickerData } from '@/types/coin';
 
 interface Props {
@@ -19,13 +19,16 @@ const Chart = ({ selectedTicker }: Props) => {
   const histogramSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null); // 거래량 시리즈 참조 추가
   //추세선 추가
   const trendLineSeriesRef = useRef<ISeriesApi<'Line'> | null>(null); // Added for trend line
-  //소켓, url 요청시 종목(market)을 전역변수화시키자.
-  //const newData = useNewData();
-  //const newData = useNewData(marketCode);
+  const previousMinuteRef = useRef<number | null>(null); // 이전 분 단위 타임스탬프 저장
   const newData = selectedTicker;
   console.log('data: ' + selectedTicker);
 
   const lastRangeRef = useRef({ from: 0, to: 0 });
+
+  //pricescaleId를 생성
+  const candleScaleId = 'candle-price-scale';
+  const volumeScaleId = 'volume-price-scale';
+  const trendScaleId = 'trend-price-scale';
 
   //상단에 배너 작업할때 테스트용
   // const handleMenuClick = () => {
@@ -42,30 +45,32 @@ const Chart = ({ selectedTicker }: Props) => {
 
   //차트 생성
   useEffect(() => {
+
     if (chartContainerRef.current && !chartRef.current) {
       chartRef.current = createChart(chartContainerRef.current, {
         width: 700,
         height: 600,
       });
 
-      //pricescaleId를 생성
-      const candleScaleId = 'candle-price-scale';
-      const priceScaleId = 'upbit-price-scale';
-      const volumeScaleId = 'volume-price-scale';
-
+      // 캔들 축
       candleSeriesRef.current = chartRef.current.addCandlestickSeries({
         priceLineVisible: true,
         lastValueVisible: true,
-        priceFormat: { type: 'price', precision: 0, minMove: 0.01 },
+        //tickMarkFormatter 오류로 인한 수정
+        //priceFormat: { type: 'price', precision: 0, minMove: 0.01 },
+        priceFormat: {
+          type: 'custom',
+          formatter: (price: number) => `${price.toFixed(2)}` // 가격 포맷을 달러와 소수점 두 자리로 설정
+        },
         priceScaleId: candleScaleId,
       });
 
+      //거래량 축
       //24.05.04 volume
       histogramSeriesRef.current = chartRef.current.addHistogramSeries({
         color: '#26a69a',
-        priceFormat: {
-          type: 'volume',
-        },
+                //tickMarkFormatter 오류로 인한 수정
+        priceFormat: {type: 'volume'},
         //추세선 추가
         priceScaleId: volumeScaleId,
         // priceScaleId: 'right',
@@ -78,35 +83,42 @@ const Chart = ({ selectedTicker }: Props) => {
       //추세선 추가
       trendLineSeriesRef.current = chartRef.current.addLineSeries({
         color: 'black',
-        lineWidth: 0.5,
-        priceScaleId: priceScaleId,
+        lineWidth: 1,
+        priceScaleId: trendScaleId,
+        //tickMarkFormatter 오류로 인한 수정
       });
 
-      // 해당 가격 축의 설정을 조정
+      // 캔들 축 설정
       chartRef.current.priceScale(candleScaleId).applyOptions({
         autoScale: true,
+        scaleMargins: {
+          top: 0.3,
+          bottom: 0.25,
+        },
+        borderVisible: true,
+        borderColor: '#555ffd',
       });
+      // 거래량 축 설정
       chartRef.current.priceScale(volumeScaleId).applyOptions({
+        autoScale: true,
         scaleMargins: {
           top: 0.8,
           bottom: 0,
         },
       });
-      chartRef.current.priceScale(priceScaleId).applyOptions({
+
+      //추세선 가격 축 설정
+      chartRef.current.priceScale(trendScaleId).applyOptions({
         autoScale: true,
-        invertScale: false,
-        alignLabels: true,
-        borderVisible: true,
-        borderColor: '#555ffd',
         scaleMargins: {
           top: 0.3,
           bottom: 0.25,
         },
-        entireTextOnly: true,
-        tickMarkFormatter: price => (price / 100000).toFixed(1),
+        borderVisible: true,
+        borderColor: '#555ffd',
       });
 
-      //setup time scale formatter
+      //timeScale 축 설정
       chartRef.current.timeScale().applyOptions({
         timeVisible: true,
         secondsVisible: false,
@@ -129,8 +141,14 @@ const Chart = ({ selectedTicker }: Props) => {
         },
       });
 
-      setupTooltip(chartRef.current, candleSeriesRef.current);
-
+      //=> 각 candle, volume, trend별로 설정해야됨.
+      //=>> 이렇게 설정하면 setuptooltip 마우스 Hover시 오류발생. 각각 다르게 설정해야됨 
+      setupPriceScales(chartRef.current);
+      //setupTooltip(chartRef.current, candleSeriesRef.current);
+      setupTooltip(chartRef.current, candleSeriesRef.current as ISeriesApi<'Candlestick'>);
+      setupTooltip(chartRef.current, histogramSeriesRef.current as ISeriesApi<'Histogram'>);
+      setupTooltip(chartRef.current, trendLineSeriesRef.current as ISeriesApi<'Line'>);
+      
       chartRef.current.timeScale().subscribeVisibleTimeRangeChange(handleZoom);
       //charthandler 설정
       fetchData(200);
@@ -159,83 +177,108 @@ const Chart = ({ selectedTicker }: Props) => {
       return `${year}-${month}-${day} ${hours}:${minutes}`; // 시간 포맷 변경
     };
 
+  const currentMinute = Math.floor(newData.timestamp / (1000 * 60)); // 분 단위로 변환
+
+      // 처음 데이터이거나 분이 변경된 경우 업데이트
+      if (previousMinuteRef.current === null || previousMinuteRef.current !== currentMinute) {
+        previousMinuteRef.current = currentMinute;
+
+
     console.log('New data in component:', newData);
     candleSeriesRef.current.update({
-      //time: Math.floor(newData.timestamp/1000),
       //정상
-        time: Math.floor(new Date(newData.timestamp).getTime() / 1000),
-        //time: formatTimestamp(newData.timestamp),
-        //time: new Date(newData.timestamp).toLocaleTimeString(),
-        open: newData.opening_price / 100000,
-        high: newData.high_price / 100000,
-        low: newData.low_price / 100000,
-        close: newData.trade_price / 100000,
-        // time: newData.timestamp,
-        // open: newData.open / 100000,
-        // high: newData.high / 100000,
-        // low: newData.low / 100000,
-        // close: newData.close / 100000,
-      });
+      time: Math.floor(new Date(newData.timestamp).getTime() / 1000),
+      //time: formatTimestamp(newData.timestamp),
+      //time: new Date(newData.timestamp).toLocaleTimeString(),
+      open: newData.opening_price / 100000,
+      high: newData.high_price / 100000,
+      low: newData.low_price / 100000,
+      close: newData.trade_price / 100000,
+    });
 
       histogramSeriesRef.current.update({
-        //time: Math.floor(newData.timestamp/1000),
-        //정상
-        time: Math.floor(new Date(newData.timestamp).getTime() / 1000),
-        //time: formatTimestamp(newData.timestamp),
-        //time: new Date(newData.timestamp).toLocaleTimeString(),
-        value: newData.trade_volume,
-        color: newData.trade_price > newData.opening_price ? '#0000FF' : '#FFC0CB',
-        // time: newData.timestamp,
-        // value: newData.trade_volume,
-        // color: newData.close > newData.open ? '#0000FF' : '#FFC0CB',
-      });
+      //정상
+      time: Math.floor(new Date(newData.timestamp).getTime() / 1000),
+      //time: formatTimestamp(newData.timestamp),
+      //time: new Date(newData.timestamp).toLocaleTimeString(),
+      value: newData.trade_volume,
+      color: newData.trade_price > newData.opening_price ? '#0000FF' : '#FFC0CB',
+    });
     }
+  }
   }, [newData]);
 
-  // function prepareHistogramData(data: UpbitCandle[]): HistogramData[] {
-  //   return data.map(candle => ({
-  //     time: candle.candle_date_time_utc,
-  //     value: candle.candle_acc_trade_volume,
-  //     color: candle.trade_price > candle.opening_price ? '#0000FF' : '#FFC0CB',
-  //   }));
-  // }
+  function setupPriceScales(chart: IChartApi) {
+     // 캔들
+  chart.priceScale(candleScaleId).applyOptions({
+    autoScale: true,
+    scaleMargins: {
+      top: 0.3,
+      bottom: 0.25,
+    },
+    borderVisible: true,
+    borderColor: '#FF6347',
+    mode: 1,  // Normal mode
+  });
 
-  // histogramSeriesRef.current.setData(
-  //   sortedData.map(data => ({
-  //     time: data.time,
-  //     value: data.volume, // 데이터 검증: volume이 정의되지 않았다면 0을 사용
-  //     color: data.close > data.open ? '#0000FF' : '#FFC0CB',
-  //   }))
-  // );
+  // 거래량
+  chart.priceScale(volumeScaleId).applyOptions({
+    autoScale: true,
+    scaleMargins: {
+      top: 0.8,
+      bottom: 0.1,
+    },
+    borderVisible: true,
+    borderColor: '#4682B4',
+    mode: 2,  // Percentage mode
+  });
 
-  function setupTooltip(chart: IChartApi, series: ISeriesApi<'Candlestick'>) {
+  // 추세선
+  chart.priceScale(trendScaleId).applyOptions({
+    autoScale: true,
+    scaleMargins: {
+      top: 0.4,
+      bottom: 0.15,
+    },
+    borderVisible: true,
+    borderColor: '#3CB371',
+    mode: 1,  // Normal mode
+  });
+  }
+
+  //setuptooltip 다형성 지원
+  function setupTooltip(
+    chart: IChartApi,
+    series: ISeriesApi<'Candlestick'> | ISeriesApi<'Histogram'> | ISeriesApi<'Line'>
+  ) {
     const tooltip = document.createElement('div');
     tooltip.className = 'floating-tooltip';
     tooltip.style.position = 'fixed';
     document.body.appendChild(tooltip);
-
+  
     chart.subscribeCrosshairMove(param => {
-      if (
-        !param.time ||
-        param.point === undefined ||
-        !param.price ||
-        !param.seriesPrices.get(series)
-      ) {
+      if (!param.time || param.point === undefined || !param.seriesPrices || !series) {
         tooltip.style.display = 'none';
         return;
       }
+  
       const priceData = param.seriesPrices.get(series);
       if (!priceData) {
         tooltip.style.display = 'none';
         return;
-      }        
-      tooltip.innerHTML = `
-        Date: ${param.time ? new Date(param.time *1000) : 'N/A'}<br>
-        Open: ${priceData.open}<br>
-        High: ${priceData.high}<br>
-        Low: ${priceData.low}<br>
-        Close: ${priceData.close}
-      `;
+      }
+  
+      let content = `Date: ${param.time ? new Date(param.time * 1000).toLocaleString() : 'N/A'}<br>`;
+      if (series.seriesType() === 'Candlestick') {
+        content += `Open: ${priceData.open.toFixed(2)}<br>
+                    High: ${priceData.high.toFixed(2)}<br>
+                    Low: ${priceData.low.toFixed(2)}<br>
+                    Close: ${priceData.close.toFixed(2)}<br>`;
+      } else if (series.seriesType() === 'Histogram' || series.seriesType() === 'Line') {
+        content += `Value: ${priceData.value.toFixed(2)}<br>`;
+      }
+  
+      tooltip.innerHTML = content;
       tooltip.style.display = 'block';
       tooltip.style.left = `${param.point.x + 20}px`;
       tooltip.style.top = `${param.point.y + 20}px`;
@@ -272,30 +315,30 @@ const Chart = ({ selectedTicker }: Props) => {
 
       const adapter = new ChartDataAdapter(response.data);
       const chartData = adapter.adapt();
+      const adjustedData = chartData.map(data => ({
+        time: data.time,
+        value: data.volume * 100000,  // Adjusting the volume data
+        color: data.close > data.open ? '#0000FF' : '#FFC0CB',
+      }));
       candleSeriesRef.current.setData(chartData);
+      histogramSeriesRef.current?.setData(adjustedData);
 
-      // const histogramData = prepareHistogramData(sortedData);
-      // histogramSeriesRef.current?.setData(histogramData);
-
-      histogramSeriesRef.current?.setData(
-        chartData.map(data => ({
-          time: data.time,
-          value: data.volume, // 데이터 검증: volume이 정의되지 않았다면 0을 사용
-          color: data.close > data.open ? '#0000FF' : '#FFC0CB',
-        }))
-      );
+      // histogramSeriesRef.current?.setData(
+      //   chartData.map(data => ({
+      //     time: data.time,
+      //     value: data.volume * 1000, // 데이터 검증: volume이 정의되지 않았다면 0을 사용
+      //     color: data.close > data.open ? '#0000FF' : '#FFC0CB',
+      //   }))
+      // );
 
       //추세선 추가
       trendLineSeriesRef.current?.setData(
         chartData.map(data => ({
           time: data.time,
-          value: data.open / 100000,
-        }))
+          value: data.open,
+        })) 
       );
-      // trendLineSeriesRef.current.setData([
-      //   { time: newData.timestamp - 1, value: newData.open / 100000 },
-      //   { time: newData.timestamp, value: newData.close / 100000 },
-      // ]);
+
     } catch (error) {
       //console.error('Error fetching data:', error);
       console.warn('Error fetching data:', error);
@@ -303,7 +346,7 @@ const Chart = ({ selectedTicker }: Props) => {
   };
 
   const handleZoom = () => {
-    // if (chartRef.current) {
+
     const range = chartRef.current?.timeScale().getVisibleLogicalRange();
     console.log('책정된 range:', range);
     if (
@@ -317,7 +360,6 @@ const Chart = ({ selectedTicker }: Props) => {
       fetchData(count);
       lastRangeRef.current = { from: range.from, to: range.to };
     }
-    // }
   };
 
   const zoomIn = () => {
