@@ -12,8 +12,8 @@ const OrderbookDetail = ({ orderbookDetail }: Props) => {
   if (!orderbookDetail) return null;
 
   return (
-    <div>
-      <table className="border-2 bg-white text-xs">
+    <div className="h-screen w-full overflow-y-scroll">
+      <table className="border-2 bg-white text-sm font-bold w-full">
         <colgroup>
           <col width="42" />
           <col width="120" />

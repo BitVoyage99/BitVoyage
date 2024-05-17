@@ -44,7 +44,7 @@ const Chart = ({ selectedTicker }: Props) => {
   useEffect(() => {
     if (chartContainerRef.current && !chartRef.current) {
       chartRef.current = createChart(chartContainerRef.current, {
-        width: 700,
+        width: 0,
         height: 600,
       });
 
