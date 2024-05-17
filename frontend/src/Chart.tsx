@@ -132,34 +132,62 @@ const Chart = ({ selectedTicker }: Props) => {
       setupTooltip(chartRef.current, candleSeriesRef.current);
 
       chartRef.current.timeScale().subscribeVisibleTimeRangeChange(handleZoom);
-
+      //charthandler 설정
       fetchData(200);
     }
-  }, [unit]); // Ensure formatter updates when unit changes
+  }, [unit]);
 
   //1. fetchData
-
+  //=> chathandler 설정
   //2, 소켓통신 결과 newData를 적용
   useEffect(() => {
-    if (
-      newData &&
-      candleSeriesRef.current &&
-      histogramSeriesRef.current &&
-      trendLineSeriesRef.current
-    ) {
-      console.log('New data in component:', newData);
-      candleSeriesRef.current.update({
-        time: newData.timestamp,
-        open: newData.open / 100000,
-        high: newData.high / 100000,
-        low: newData.low / 100000,
-        close: newData.close / 100000,
+    
+  if (
+    newData &&
+    candleSeriesRef.current &&
+    histogramSeriesRef.current &&
+    trendLineSeriesRef.current
+  ) {
+
+    const formatTimestamp = (timestamp:number) => {
+      const date = new Date(Math.floor(timestamp / 1000)); // 밀리초 단위로 변환하여 Date 객체 생성
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`; // 시간 포맷 변경
+    };
+
+    console.log('New data in component:', newData);
+    candleSeriesRef.current.update({
+      //time: Math.floor(newData.timestamp/1000),
+      //정상
+        time: Math.floor(new Date(newData.timestamp).getTime() / 1000),
+        //time: formatTimestamp(newData.timestamp),
+        //time: new Date(newData.timestamp).toLocaleTimeString(),
+        open: newData.opening_price / 100000,
+        high: newData.high_price / 100000,
+        low: newData.low_price / 100000,
+        close: newData.trade_price / 100000,
+        // time: newData.timestamp,
+        // open: newData.open / 100000,
+        // high: newData.high / 100000,
+        // low: newData.low / 100000,
+        // close: newData.close / 100000,
       });
 
       histogramSeriesRef.current.update({
-        time: newData.timestamp,
+        //time: Math.floor(newData.timestamp/1000),
+        //정상
+        time: Math.floor(new Date(newData.timestamp).getTime() / 1000),
+        //time: formatTimestamp(newData.timestamp),
+        //time: new Date(newData.timestamp).toLocaleTimeString(),
         value: newData.trade_volume,
-        color: newData.close > newData.open ? '#0000FF' : '#FFC0CB',
+        color: newData.trade_price > newData.opening_price ? '#0000FF' : '#FFC0CB',
+        // time: newData.timestamp,
+        // value: newData.trade_volume,
+        // color: newData.close > newData.open ? '#0000FF' : '#FFC0CB',
       });
     }
   }, [newData]);
@@ -200,9 +228,9 @@ const Chart = ({ selectedTicker }: Props) => {
       if (!priceData) {
         tooltip.style.display = 'none';
         return;
-      }
+      }        
       tooltip.innerHTML = `
-        Date: ${param.time ? new Date(param.time * 1000).toLocaleString() : 'N/A'}<br>
+        Date: ${param.time ? new Date(param.time *1000) : 'N/A'}<br>
         Open: ${priceData.open}<br>
         High: ${priceData.high}<br>
         Low: ${priceData.low}<br>
@@ -229,15 +257,14 @@ const Chart = ({ selectedTicker }: Props) => {
     //typeof 이나 instanceOf 으로 구분하는 함수 하나, 이에 대해 parsing 변경해줘야되는 값으로 구분 피료. - 에러 처리
     //에러 처리 또한 필요하고, 에러 처리할때 사용자가 월/주/일/시간/분 중에 어떤값을 선택했는지도 필요함. - 일관성과 가독성
 
-    const urlParams = {
+
+    const selectedParam = {
       minute: { url: 'minutes/1', count: count }, // 분 데이터
       hour: { url: 'minutes/60', count: count }, // 시간 데이터
       day: { url: 'days', count: count }, // 일 데이터
       weeks: { url: 'weeks', count: count }, //주 데이터
       month: { url: 'months', count: count }, // 월 데이터
-    };
-
-    const selectedParam = urlParams[unit];
+    }[unit];
     try {
       const response = await axios.get(
         `https://api.upbit.com/v1/candles/${selectedParam.url}?market=${marketCode}&count=${selectedParam.count}`
@@ -286,6 +313,7 @@ const Chart = ({ selectedTicker }: Props) => {
     ) {
       const count = Math.ceil((range.to - range.from) * 1.5);
       //TODO updateData 로 변경 필요
+      //charthandler 설정
       fetchData(count);
       lastRangeRef.current = { from: range.from, to: range.to };
     }

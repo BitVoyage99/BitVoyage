@@ -40,16 +40,18 @@ class ChartDataAdapter {
     return this.candles
       .map(candle => ({
         time: Math.floor(
-          new Date(candle.candle_date_time_utc).getTime() / 1000
+          new Date(candle.timestamp).getTime() / 1000
         ),
-        open: candle.opening_price / 100000,
+        // time: candle.candle_date_time_utc,
+         open: candle.opening_price / 100000,
         high: candle.high_price / 100000,
         low: candle.low_price / 100000,
         close: candle.trade_price / 100000,
         //24.05.04 volume을 추가
         volume: candle.candle_acc_trade_volume,
       }))
-      .sort((a, b) => a.time - b.time); // Ensure data is sorted by time
+      //.sort((a, b) => a.time - b.time); // Ensure data is sorted by time
+      .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
   }
 }
 export default ChartDataAdapter;
